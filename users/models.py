@@ -1,4 +1,73 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import random
+from django.utils import timezone
+from datetime import timedelta
 
-# Create your models here.
+# ----------------------------
+# Custom User Manager
+# ----------------------------
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, phone, password=None, role='client', **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        if not phone:
+            raise ValueError('Phone is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, phone=phone, role=role, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
+    def create_superuser(self, email, phone, password=None, **extra_fields):
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, phone, password, role='admin', **extra_fields)
+
+# ----------------------------
+# Custom User Model
+# ----------------------------
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = (
+        ('admin','Admin'),
+        ('client','Client'),
+        ('employee','Employee'),
+    )
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15, unique=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='client')
+    is_active = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['phone']
+
+    def __str__(self):
+        return f"{self.email} ({self.role})"
+
+# ----------------------------
+# OTP Model
+# ----------------------------
+class OTP(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='otps')
+    code = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = random.randint(1000, 9999)  # 4-digit OTP
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)  # OTP valid for 10 minutes
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"{self.user.email} - {self.code} ({'expired' if self.is_expired() else 'active'})"
