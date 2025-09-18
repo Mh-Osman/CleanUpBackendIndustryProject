@@ -105,13 +105,23 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import BasePermission
 
+
+class IsAdminOrEmployee(BasePermission):
+    """
+    Allows access only to admin and employee users.
+    """
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and 
+                   request.user.role in ['admin', 'employee'])
 class UserListAPIView(ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrEmployee]
     pagination_class = PageNumberPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['email', 'phone', 'role']
     ordering_fields = ['date_joined', 'email']
+
 

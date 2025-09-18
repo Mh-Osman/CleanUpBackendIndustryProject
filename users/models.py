@@ -8,22 +8,30 @@ from datetime import timedelta
 # Custom User Manager
 # ----------------------------
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, phone, password=None, role='client', **extra_fields):
+    def create_user(self, name ,email, phone, password=None, role='client', **extra_fields):
+        if not name:
+            raise ValueError('Name is required')
         if not email:
             raise ValueError('Email is required')
         if not phone:
             raise ValueError('Phone is required')
+        
         email = self.normalize_email(email)
-        user = self.model(email=email, phone=phone, role=role, **extra_fields)
+        user = self.model(name=name,email=email, phone=phone, role=role, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, phone, password=None, **extra_fields):
+    def create_superuser(self, name, email, phone, password=None, **extra_fields):
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, phone, password, role='admin', **extra_fields)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        return self.create_user(name,email, phone, password, role='admin', **extra_fields)
 
 # ----------------------------
 # Custom User Model
@@ -34,6 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('client','Client'),
         ('employee','Employee'),
     )
+    name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='client')
@@ -45,10 +54,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone']
+    REQUIRED_FIELDS = ['name','phone']
 
     def __str__(self):
-        return f"{self.email} ({self.role})"
+        return f"{self.name} ({self.role})"
 
 # ----------------------------
 # OTP Model
