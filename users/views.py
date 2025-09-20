@@ -44,6 +44,21 @@ class VerifyOTPAPIView(APIView):
             except OTP.DoesNotExist:
                 return Response({"error":"Invalid OTP or email"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ResendOTPAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        try:
+            user = CustomUser.objects.get(email=email)
+            if user.is_active:
+                return Response({"error":"Account already verified"}, status=status.HTTP_400_BAD_REQUEST)
+            otp_obj = OTP.objects.create(user=user, code=random.randint(1000,9999))
+            send_otp_email(user.email, otp_obj.code)
+            return Response({"message":"OTP resent successfully"}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({"error":"User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 # ✅ Login
 class LoginAPIView(APIView):
