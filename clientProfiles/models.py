@@ -19,7 +19,9 @@ class ClientProfile(models.Model):
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)  # create time auto set
-    updated_at = models.DateTimeField(auto_now=True)      # update time auto update
+    updated_at = models.DateTimeField(auto_now=True) 
+
+    last_login = models.DateTimeField(null=True, blank=True)  # update when user logs in with signal
 
     def save(self, *args, **kwargs):
         # যদি client region/building বদলায় → তার apartment null হবে
