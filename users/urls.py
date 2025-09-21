@@ -10,3 +10,4 @@ urlpatterns = [
     path('reset-password/', ResetPasswordAPIView.as_view(), name='reset-password'),
     path('', UserListAPIView.as_view(), name='user-list'),
 ]
+ 
