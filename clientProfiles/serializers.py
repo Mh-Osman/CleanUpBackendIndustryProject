@@ -6,27 +6,21 @@ from .models import ClientProfile
 from locations.models import Region, Building, Apartment
 
 class ClientProfileSerializer(serializers.ModelSerializer):
-    region = serializers.SlugRelatedField(
-        queryset=Region.objects.all(), slug_field="name", required=False
-    )
-    building = serializers.SlugRelatedField(
-        queryset=Building.objects.all(), slug_field="name", required=False
-    )
-    apartment = serializers.SlugRelatedField(
-        queryset=Apartment.objects.all(), slug_field="number", required=False
-    )
-
+  
     class Meta:
         model = ClientProfile
-      #  fields = ['region', 'building', 'apartment', 'avatar', 'location', 'birth_date', 'created_at', 'updated_at', 'last_login']
+        #fields= ['avatar', 'location', 'birth_date', 'last_login']
+        fields = ['avatar', 'location', 'birth_date', 'last_login']
         fields = '__all__'
 
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)
     location = serializers.CharField(source='client_profile.location', allow_blank=True, required=False)
+    avatar = serializers.ImageField(source='client_profile.avatar', allow_null=True, required=False)
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone', 'location','is_active', 'date_joined', 'client_profile']
+        fields = ['id', 'name', 'email', 'phone', 'location', 'avatar', 'is_active', 'date_joined', 'client_profile']
         read_only_fields = ['id', 'date_joined']
 
     def create(self, validated_data):

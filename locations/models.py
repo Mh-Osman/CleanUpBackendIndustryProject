@@ -1,6 +1,8 @@
 from django.db import models
 import uuid
 
+from django.forms import ValidationError
+
 
 class Region(models.Model):
     """
@@ -14,6 +16,12 @@ class Region(models.Model):
     class Meta:
         verbose_name = "Region"
         verbose_name_plural = "Regions"
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            super().save(*args, **kwargs)  # Save first to get an ID
+        self.code = 'R'+self.name+str(self.id)  # Auto-generate code based on ID code by default
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -32,7 +40,11 @@ class Building(models.Model):
     class Meta:
         verbose_name = "Building"
         verbose_name_plural = "Buildings"
-
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            super().save(*args, **kwargs)  # Save first to get an ID    
+        self.code = f"{self.region.code}B{self.id}"  # Auto-generate code if empty example Building code = RYD-B1
+        super().save(*args, **kwargs)
     def __str__(self):
         return f"{self.name} - {self.region.name}"
 
@@ -56,22 +68,16 @@ class Apartment(models.Model):
     def __str__(self):
         return f"{self.name} - {self.building.name}"
 
-    def generate_code(self, client_code=None):
-        """
-        Generate unique apartment code: regionCode-buildingCode-clientCode
-        """
-        region_code = self.building.region.code
-        building_code = self.building.code
-        client_part = client_code or "XXX"
-        return f"{region_code}-{building_code}-{client_part}"
 
     def save(self, *args, **kwargs):
-        """
-        Override save: auto-generate `code` if empty.
-        Developer doesn’t need to call generate_code() manually.
-        """
-        if not self.code:
-            client_code = kwargs.pop("client_code", None)
-            self.code = self.generate_code(client_code=client_code)
+        
+        # client-based code জেনারেট করতে গেলে ClientApartment ট্র্যাক করতে হবে
+        # তাই আমরা প্রথম save এ শুধু Building/Region কোড রাখব
+        if self.id is None:
+            super().save(*args, **kwargs)  # Save first to get an ID    
+        self.code = f"{self.building.region.code}{self.building.code}{'C'}{self.name}"
+         # check duplicate manually (ignore self.pk if updating)
+        if Apartment.objects.filter(code=self.code).exclude(pk=self.pk).exists():
+            raise ValidationError(f"⚠️ Apartment with code {self.code} already exists!")
         super().save(*args, **kwargs)
         
