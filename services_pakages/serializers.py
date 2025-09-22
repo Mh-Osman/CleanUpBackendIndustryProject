@@ -8,4 +8,3 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
         read_only_fields = ['id']
 
-class ServiceSerializer(serializers.ModelSerializer):

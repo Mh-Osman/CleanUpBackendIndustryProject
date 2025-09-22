@@ -82,6 +82,8 @@ INSTALLED_APPS = [
     'locations',
     'clientProfiles',
     'services_pakages',
+    'employeeProfiles',
+   
     
 ]
 
