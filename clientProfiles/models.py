@@ -6,7 +6,7 @@ from django.utils import timezone
 from users.models import CustomUser
 
 class ClientProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="client_profile")
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="client_profile" , limit_choices_to={'user_type': 'client'})
     
     # Extra profile info
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)  # Profile Picture

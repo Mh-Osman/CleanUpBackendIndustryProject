@@ -10,7 +10,7 @@ class ClientProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClientProfile
         #fields= ['avatar', 'location', 'birth_date', 'last_login']
-        fields = ['avatar', 'location', 'birth_date', 'last_login']
+       # fields = ['avatar', 'location', 'birth_date', 'last_login']
         fields = '__all__'
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class ClientSerializer(serializers.ModelSerializer):
             profile_data = {}
         if location_data:
             profile_data['location'] = location_data
-        validated_data['role'] = 'client'
+        validated_data['user_type'] = 'client'
         user = CustomUser.objects.create_user(**validated_data)
 
         # Add profile if data passed

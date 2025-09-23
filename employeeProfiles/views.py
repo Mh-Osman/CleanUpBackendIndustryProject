@@ -4,7 +4,7 @@ from .serializers import EmployeeProfileSerializer, EmployeeSerializer, Employee
 from users.models import CustomUser
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(role='employee').select_related('employee_profile')
+    queryset = CustomUser.objects.filter(user_type='employee').select_related('employee_profile')
     serializer_class = EmployeeSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -29,6 +29,6 @@ class EmployeeSalaryViewSet(viewsets.ModelViewSet):
 
 
 class EmployeeProfileViewSet(viewsets.ModelViewSet):
-    queryset = EmployeeProfile.objects.filter(user__role='employee')
+    queryset = EmployeeProfile.objects.filter(user__user_type='employee')
     serializer_class = EmployeeProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
