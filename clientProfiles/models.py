@@ -1,17 +1,13 @@
 from django.db import models
+from django.forms import ValidationError
 from locations.models import Region, Building, Apartment
 import uuid
 from django.utils import timezone
 from users.models import CustomUser
 
 class ClientProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="client_profile")
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="client_profile" , limit_choices_to={'user_type': 'client'})
     
-    # Address Relation
-    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
-    building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
-    apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True)
-
     # Extra profile info
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)  # Profile Picture
     location = models.CharField(max_length=255, null=True, blank=True)        # Extra address info
@@ -23,14 +19,33 @@ class ClientProfile(models.Model):
 
     last_login = models.DateTimeField(null=True, blank=True)  # update when user logs in with signal
 
-    def save(self, *args, **kwargs):
-        # যদি client region/building বদলায় → তার apartment null হবে
-        if self.pk:
-            old = ClientProfile.objects.get(pk=self.pk)
-            if old.region != self.region or old.building != self.building:
-                self.apartment = None
-        super().save(*args, **kwargs)
-
+    
+  
     def __str__(self):
         return f"Client: {self.user.name}"
 
+#represent mant to many relation between client and apartment with unique code
+class ClientApartment(models.Model):
+    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name="client_apartments")
+    apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="client_apartments")
+
+    final_code = models.CharField(max_length=50, unique=True, blank=True)
+
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+       
+        #region_code = self.apartment.building.region.code
+        building_code = self.apartment.building.code
+        #serially num based on client 
+        last_num = ClientApartment.objects.filter(client=self.client).count() + 1
+        num = str(last_num)
+        client_code = self.client.id
+        self.final_code = f"{building_code}{'C'}{client_code}-{num}"
+        # if ClientApartment.objects.filter(client=self.client, apartment=self.apartment).exclude(pk=self.pk).exists():
+        #     raise ValidationError("❌ This apartment is already assigned to this client!")  #vvi
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.final_code} ({self.client.user.name})"

@@ -129,14 +129,14 @@ class IsAdminOrEmployee(BasePermission):
     """
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and 
-                   request.user.role in ['admin', 'employee'])
+                   request.user.user_type in ['admin', 'employee'])
 class UserListAPIView(ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrEmployee]
     pagination_class = PageNumberPagination
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['email', 'phone', 'role']
+    search_fields = ['email', 'phone', 'user_type']
     ordering_fields = ['date_joined', 'email']
 
 
