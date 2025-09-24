@@ -18,6 +18,7 @@ class EmployeeProfile(models.Model):
     is_on_leave = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to="employee_avatars/", null=True, blank=True)  # Profile Picture
     salary_day = models.IntegerField(null=True, blank=True)  # মাসের কোন দিন salary দিবে
+    base_salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Default salary
     created_at = models.DateTimeField(auto_now_add=True)  # create time auto set
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -32,7 +33,6 @@ class EmployeeProfile(models.Model):
 class EmployeeSalary(models.Model):
     employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="salaries" , limit_choices_to={'user_type': 'employee'})
     month = models.DateField()                   # Which month
-    base_salary = models.DecimalField(max_digits=10, decimal_places=2)
     performance_bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -42,8 +42,10 @@ class EmployeeSalary(models.Model):
     class Meta:
         unique_together = ("employee", "month")  # one salary per month
     def save(self, *args, **kwargs):
-        # total_paid auto calculate হবে
-        self.total_paid = self.base_salary + self.performance_bonus - self.deductions
+        base_salary = 0
+        if hasattr(self.employee, 'employee_profile') and self.employee.employee_profile.base_salary:
+            base_salary = self.employee.employee_profile.base_salary
+        self.total_paid = base_salary + self.performance_bonus - self.deductions
         super().save(*args, **kwargs)
 
     def __str__(self):
