@@ -26,7 +26,8 @@ class ClientProfile(models.Model):
 
 #represent mant to many relation between client and apartment with unique code
 class ClientApartment(models.Model):
-    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name="client_apartments")
+    # client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name="client_apartments")
+    client = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="client_apartments" , limit_choices_to={'user_type': 'client'})
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="client_regions")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="client_buildings")
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="client_apartments")
@@ -43,7 +44,7 @@ class ClientApartment(models.Model):
         last_num = ClientApartment.objects.filter(client=self.client).count() + 1
         num = str(last_num)
         client_code = self.client.id
-        self.final_code = f"{building_code}{'C'}{client_code}-{num}"
+        self.final_code = f"{building_code}{'C'}{client_code}-{num}" # Auto-generate code if empty example Building code = RYD-B1-C12-1
         # if ClientApartment.objects.filter(client=self.client, apartment=self.apartment).exclude(pk=self.pk).exists():
         #     raise ValidationError("❌ This apartment is already assigned to this client!")  #vvi
         super().save(*args, **kwargs)

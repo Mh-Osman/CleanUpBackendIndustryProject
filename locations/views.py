@@ -14,4 +14,21 @@ class RegionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['name', 'code']
-    search_fields = ['name', 'code']
+    search_fields = ['name', 'code',]
+
+class BuildingViewSet(viewsets.ModelViewSet):
+    queryset = Building.objects.all()
+    serializer_class = BuildingSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['name', 'code', 'region__name', 'region__code']
+    search_fields = ['name', 'code', 'region__name', 'region__code']
+
+class apartmentViewSet(viewsets.ModelViewSet):
+    queryset = Apartment.objects.all()
+    serializer_class = ApartmentSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['name', 'code', 'building__name', 'building__code', 'region__name', 'region__code']
+    search_fields = ['name', 'code', 'building__name', 'building__code', 'region__name', 'region__code']
+    
