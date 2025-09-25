@@ -66,7 +66,7 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
 
         return instance
     
-
+   
 
 class EmployeeSalarySerializer(serializers.ModelSerializer):
     class Meta:

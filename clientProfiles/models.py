@@ -27,10 +27,11 @@ class ClientProfile(models.Model):
 #represent mant to many relation between client and apartment with unique code
 class ClientApartment(models.Model):
     client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name="client_apartments")
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="client_regions")
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="client_buildings")
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="client_apartments")
-
+    location_details = models.CharField(max_length=255, null=True, blank=True)  # Extra location details
     final_code = models.CharField(max_length=50, unique=True, blank=True)
-
     is_primary = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

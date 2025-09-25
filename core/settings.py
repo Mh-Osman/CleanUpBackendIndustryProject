@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'clientProfiles',
     'services_pakages',
     'employeeProfiles',
+    'drf_yasg',
    
     
 ]
