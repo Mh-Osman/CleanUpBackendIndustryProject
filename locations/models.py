@@ -1,6 +1,8 @@
 from django.db import models
 import uuid
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+
 
 class Region(models.Model):
     """
@@ -19,27 +21,28 @@ class Region(models.Model):
     def save(self, *args, **kwargs):
         creating = self._state.adding
 
-        # First save to get ID if creating
-        super().save(*args, **kwargs)
+        try:
+            with transaction.atomic():
+                # Save first if new to get an ID
+                if creating:
+                    super().save(*args, **kwargs)
 
-        # Auto-generate code
-        new_code = f"R{self.name}{self.id}"
+                # Generate new system code
+                new_code = f"R{self.name}{self.id}"
 
-        # Avoid duplicates
-        if Region.objects.filter(code=new_code).exclude(pk=self.pk).exists():
-            raise ValidationError(f"⚠️ Region with code {new_code} already exists!")
+                # Check for duplicates
+                if Region.objects.filter(code=new_code).exclude(pk=self.pk).exists():
+                    raise ValidationError({"code": f"⚠️ Region with code {new_code} already exists!"})
 
-        self.code = new_code
+                # Keep old code in input_code
+                self.input_code = self.code
+                self.code = new_code
 
-        # Set input_code if empty
-        if not self.input_code:
-            self.input_code = self.code
+                # Save updated fields once
+                super().save(update_fields=["code", "input_code"])
 
-        # Save updated fields only if creating
-        if creating:
-            super().save(update_fields=["code", "input_code"])
-        else:
-            super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError({"input_code": f"⚠️ Region with input_code '{self.input_code}' already exists!"})
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -75,11 +78,12 @@ class Building(models.Model):
         if Building.objects.filter(code=new_code).exclude(pk=self.pk).exists():
             raise ValidationError(f"⚠️ Building with code {new_code} already exists!")
 
+        # Set input_code if empty
+        
+        self.input_code = self.code
         self.code = new_code
 
-        # Set input_code if empty
-        if not self.input_code:
-            self.input_code = self.code
+        
 
         # Save updated fields only if creating
         if creating:
@@ -117,28 +121,26 @@ class Apartment(models.Model):
         return f"{self.name} - {self.building.name}"
 
     def save(self, *args, **kwargs):
-        creating = self._state.adding  # check if new object
+        creating = self._state.adding
 
-        # Save first to get ID (if creating)
-        if creating:
-            super().save(*args, **kwargs)
+        # Preserve original user-provided code into input_code (first time only)
+        if creating and not self.input_code:
+            self.input_code = self.code  
 
-        # Auto-generate code
+        # Auto-generate final code
         new_code = f"{self.building.region.code}{self.building.code}C{self.name}"
 
-        # Avoid duplicates
+        # Check duplicate for system-generated code (before saving)
         if Apartment.objects.filter(code=new_code).exclude(pk=self.pk).exists():
-            raise ValidationError(f"⚠️ Apartment with code {new_code} already exists!")
+            raise ValidationError(
+                {"code": f"⚠️ Apartment with code {new_code} already exists!"}
+            )
+        self.code = new_code  # overwrite with system-generated code
 
-        self.code = new_code
-
-        # Set input_code only if empty
-        if not self.input_code:
-            self.input_code = self.code
-
-        # Save only updated fields if updating
-        if creating:
-            super().save(update_fields=['code', 'input_code'])
-        else:
-            super().save(*args, **kwargs)
-
+        try:
+            with transaction.atomic():
+                super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(
+                {"input_code": f"⚠️ Apartment with input_code '{self.input_code}' already exists!"}
+            )

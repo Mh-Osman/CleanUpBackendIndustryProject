@@ -50,4 +50,4 @@ class ClientApartment(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.final_code} ({self.client.user.name})"
+        return f"{self.final_code} ({self.client.name})"
