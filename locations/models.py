@@ -46,7 +46,7 @@ class Building(models.Model):
         self.code = f"{self.region.code}B{self.id}"  # Auto-generate code if empty example Building code = RYD-B1
         super().save(*args, **kwargs)
     def __str__(self):
-        return f"{self.name} - {self.region.name}"
+        return f"{self.name} - {self.region.name} {self.id}"
 
 
 class Apartment(models.Model):

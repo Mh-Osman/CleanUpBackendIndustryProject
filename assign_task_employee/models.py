@@ -29,7 +29,7 @@ STASTUS=(
 # assigned task to the employee
 class TaskAssignToEmployee(models.Model):
     name=models.CharField(max_length=100)
-    task_code=models.CharField(max_length=100)
+    service_code=models.CharField(max_length=100)
     description=models.TextField()
     category = models.ManyToManyField(Category,blank=True,null=True)
     base_price=models.CharField(max_length=100)
@@ -49,4 +49,4 @@ class TaskAssignToEmployee(models.Model):
     #     unique_together = ('employee', 'building','appartment')
 
     def __str__(self):
-        return f'Task name {self.name} and task_code is {self.task_code}'
+        return f'Task name {self.name} and service_code is {self.service_code}'

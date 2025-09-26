@@ -8,13 +8,13 @@ User = get_user_model()
 
 
 class TaskAssignToEmployeeSerializer(serializers.ModelSerializer):
-    category=CategorySerializer(many=True)
+    # category=CategorySerializer(many=True)
     class Meta:
         model = TaskAssignToEmployee
         fields = [
             "id",
             "name",
-            "task_code",
+            "service_code",
             "description",
             "category",
             "base_price",

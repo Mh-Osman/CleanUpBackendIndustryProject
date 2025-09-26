@@ -22,7 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
-
+STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
 # Email Settings
@@ -38,6 +39,10 @@ ALLOWED_HOSTS = [
     "localhost",
     "randomid.ngrok-free.app",
     'lisa-nondisposable-judgingly.ngrok-free.app',
+    '1f77637a09c0.ngrok-free.app',
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://1f77637a09c0.ngrok-free.app",
 ]
 
 
@@ -84,10 +89,12 @@ INSTALLED_APPS = [
     'services_pakages',
     'employeeProfiles',
     'assign_task_employee',
+    'plan',
     
-   
     
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

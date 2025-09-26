@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/v1/', include('clientProfiles.urls')),
     path('api/v1/', include('employeeProfiles.urls')),
     path('api/task/',include('assign_task_employee.urls')), 
+    path('api/plan/',include('plan.urls')),
 ]

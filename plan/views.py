@@ -1,0 +1,151 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions
+from .models import PlanModel, Subscription
+import stripe
+from django.conf import settings
+from locations.models import Apartment, Building
+from datetime import datetime, timedelta
+import stripe
+from .serializers import PlanSerailzier
+from rest_framework import viewsets
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+class PlanView(viewsets.ModelViewSet):
+    queryset=PlanModel.objects.all()
+    serializer_class=PlanSerailzier
+    # permission_classes=[permissions.IsAdminUser]
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+class CreateCheckoutSession(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        plan_id = request.data.get("plan_id")
+        building_id = request.data.get("building_id")
+        apartment_id = request.data.get("apartment_id")
+        user = request.user
+
+        # get plan, building, apartment
+        try: plan = PlanModel.objects.get(id=plan_id)
+        except PlanModel.DoesNotExist: return Response({"error":"plan not found"}, status=404)
+        try: building = Building.objects.get(id=building_id)
+        except Building.DoesNotExist: return Response({"error":"Building not found"}, status=404)
+        try: apartment = Apartment.objects.get(id=apartment_id)
+        except Apartment.DoesNotExist: return Response({"error":"Apartment not found"}, status=404)
+
+        # check existing subscription
+        subscription = Subscription.objects.filter(user=user, plan=plan, building=building).first()
+        if subscription and subscription.stripe_customer_id:
+            customer_id = subscription.stripe_customer_id
+        else:
+            customer = stripe.Customer.create(email=user.email)
+            customer_id = customer.id
+
+        # create checkout session
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            payment_method_types=["card"],
+            line_items=[{"price": plan.stripe_price_id, "quantity": 1}],
+            mode="subscription",
+            success_url="http://localhost:3000/success",
+            cancel_url="http://localhost:3000/cancel"
+        )
+
+        # create/update subscription
+        if not subscription:
+            subscription = Subscription.objects.create(
+                user=user,
+                plan=plan,
+                stripe_customer_id=customer_id,
+                status="inactive",
+                building=building,
+                apartment=apartment
+            )
+        else:
+            subscription.stripe_customer_id = customer_id
+            subscription.save()
+
+        return Response({"checkout_url": session.url})
+
+
+class PauseSubscription(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, subscription_id):
+        try:
+            sub = Subscription.objects.get(id=subscription_id)
+        except Subscription.DoesNotExist:
+            return Response({"error":"Subscription not found"}, status=404)
+
+        if not sub.stripe_subscription_id:
+            return Response({"error":"No Stripe subscription ID"}, status=400)
+
+        # Pause subscription in Stripe
+        try:
+          stripe.Subscription.modify(
+            sub.stripe_subscription_id,
+            pause_collection={
+                "behavior": "keep_as_draft",
+                "resumes_at": int((datetime.now() + timedelta(days=30)).timestamp())  # example 30 days
+            }
+         )
+        except stripe.error.InvalidRequestError as e:
+          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+        # Immediately update DB
+        sub.status = "paused"
+        sub.pause_until = datetime.now() + timedelta(days=30)
+        sub.save()
+
+        return Response({"message":"Subscription paused successfully. DB updated."})
+
+
+
+class ResumeSubscription(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, subscription_id):
+        try:
+            sub = Subscription.objects.get(id=subscription_id)
+        except Subscription.DoesNotExist:
+            return Response({"error":"Subscription not found"}, status=404)
+        if not sub.stripe_subscription_id:
+            return Response({"error":"No Stripe subscription ID"}, status=400)
+        try:
+            stripe_sub=stripe.Subscription.modify(
+            sub.stripe_subscription_id,
+            pause_collection=None
+        )
+        except stripe.error.InvalidRequestError as e:
+          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+        print(stripe_sub.get('status'))
+        sub.status = stripe_sub.get("status", "active")  # fallback to active
+        sub.pause_until = None
+        sub.save()
+       
+        return Response({"message":"Resume requested. DB will auto-update via webhook."})
+
+
+class StopSubscription(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, subscription_id):
+        try:
+            sub = Subscription.objects.get(id=subscription_id)
+        except Subscription.DoesNotExist:
+            return Response({"error":"Subscription not found"}, status=404)
+        if not sub.stripe_subscription_id:
+            return Response({"error":"No Stripe subscription ID"}, status=400)
+        try:
+          stripe.Subscription.delete(sub.stripe_subscription_id)
+        except stripe.error.InvalidRequestError as e:
+          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+
+        return Response({"message":"Stop requested. DB will auto-update via webhook."})
+
+
+
