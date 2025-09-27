@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import EmployeeProfile, EmployeeSalary, Attendance, EmployeeApartmentAssignment
+from .models import EmployeeProfile, EmployeeSalary #Attendance,EmployeeApartmentAssignment
 from users.models import CustomUser
 
 class EmployeeProfileSerializer(serializers.ModelSerializer):
@@ -42,7 +42,7 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
         profile_data = validated_data.pop('employee_profile', {})
         validated_data['user_type'] = 'employee'
         validated_data['is_active'] = True  # new employee active by default
-
+        validated_data['password'] = '12345'  # default password, should be changed later
         user = CustomUser.objects.create_user(**validated_data)
 
         # create profile
@@ -69,10 +69,11 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
    
 
 class EmployeeSalarySerializer(serializers.ModelSerializer):
+    employee = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='employee'), required=True)
     class Meta:
         model = EmployeeSalary
         fields = '__all__'
-        read_only_fields = ['id', 'month', 'total_paid', 'paid_on']  # total_paid auto, paid_on auto
+        read_only_fields = ['id', 'total_paid', 'paid_on']  # total_paid auto, paid_on auto
 
     def create(self, validated_data):
         from django.utils import timezone
@@ -80,9 +81,10 @@ class EmployeeSalarySerializer(serializers.ModelSerializer):
         # default month
         if 'month' not in validated_data or validated_data['month'] is None:
             validated_data['month'] = timezone.now().date().replace(day=1)
-
+        month_date = validated_data['month']
         # check duplicate
-        if EmployeeSalary.objects.filter(employee=validated_data['employee'], month=validated_data['month']).exists():
+        if EmployeeSalary.objects.filter(employee=validated_data['employee'],  month__year=month_date.year,
+        month__month=month_date.month).exists():
             raise serializers.ValidationError(
                 "Salary for this employee for the specified month already exists."
             )

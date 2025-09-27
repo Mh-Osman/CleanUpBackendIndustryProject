@@ -3,12 +3,21 @@ from .models import  Building, Apartment
 from users.models import CustomUser
 from django.db import transaction
 
+
+class ApartmentSerializerForBuilding(serializers.ModelSerializer):
+    class Meta:
+        model = Apartment
+        fields = "__all__"
+
+
 class BuildingSerializer(serializers.ModelSerializer):
+    apartments = ApartmentSerializerForBuilding(many=True, read_only=True)
     class Meta:
         model = Building
         fields = "__all__"  # Building এর ফিল্ডগুলো
         read_only_fields = ['id']
 
+    
 
 class ApartmentSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='client'), required=True, allow_null=True)
@@ -30,12 +39,17 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
             if client and building_data:
 
-                if Apartment.objects.filter(
+                qs = Apartment.objects.filter(
                 client=client, 
                 building=building_data, 
                 apartment_number=apartment_number, 
                 
-            ).exists():
+            )
+            
+            if self.instance:
+                    qs = qs.exclude(pk=self.instance.pk)
+                
+            if qs.exists():
                  raise serializers.ValidationError(
                     "This apartment is already assigned to this client in the same building."
                 )
@@ -115,6 +129,22 @@ class ApartmentSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(str(e))
 
+    def update(self, instance, validated_data):
+        # update client (only if provided)
+        client = validated_data.get("client", instance.client)
+        if client and client.user_type != "client":
+            raise serializers.ValidationError("Invalid client ID")
+        instance.client = client
 
-         
+        # update building (only if provided via building_id)
+        if "building" in validated_data:
+            instance.building = validated_data.get("building")
+
+        # update other fields dynamically
+        for attr, value in validated_data.items():
+            if attr not in ["client", "building"]:  # already handled
+                setattr(instance, attr, value)
+
+        instance.save()
+        return instance
             

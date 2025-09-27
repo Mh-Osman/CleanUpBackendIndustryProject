@@ -7,7 +7,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer
 from rest_framework.permissions import IsAdminUser
-
+from django.db import IntegrityError, transaction
+from rest_framework.exceptions import ValidationError
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -30,31 +31,36 @@ class EmpployeeSalaryViewSet(viewsets.ModelViewSet):
     # Custom update by employee + month
     @decorators.action(detail=False, methods=["put", "patch"], url_path="update-by-employee")
     def update_by_employee(self, request):
-        employee_id = request.data.get("employee_id")
+        employee_id = request.data.get("employee")
         month = request.data.get("month")
         if not employee_id or not month:
-            return response.Response({"error": "employee_id and month are required"}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(
+                {"error": "employee and month are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Fetch the salary instance
         try:
             salary = EmployeeSalary.objects.get(employee_id=employee_id, month=month)
         except EmployeeSalary.DoesNotExist:
-            return response.Response({"error": "Salary not found for this employee in given month"}, status=status.HTTP_404_NOT_FOUND)
+            return response.Response(
+                {"error": "Salary not found for this employee in the given month"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         data = request.data.copy()
+        # Fixed fields: cannot update employee or month
         data.pop("employee", None)
-        data.pop("employee_id", None)
         data.pop("month", None)
 
         serializer = self.get_serializer(salary, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return response.Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            serializer.is_valid(raise_exception=True)
+            with transaction.atomic():
+                serializer.save()
+        except IntegrityError:
+            raise ValidationError({
+                "month": "⚠️ Salary for this employee for the specified month already exists!"
+            })
 
-    # Optional: latest salary per employee
-    @decorators.action(detail=False, methods=["get"], url_path="latest-by-employee/(?P<employee_id>[^/.]+)")
-    def latest_by_employee(self, request, employee_id=None):
-        salary = EmployeeSalary.objects.filter(employee_id=employee_id).order_by('-month').first()
-        if not salary:
-            return response.Response({"error": "No salary found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(salary)
-        return response.Response(serializer.data)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
