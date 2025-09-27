@@ -74,7 +74,12 @@ class EmployeeSalarySerializer(serializers.ModelSerializer):
         model = EmployeeSalary
         fields = '__all__'
         read_only_fields = ['id', 'total_paid', 'paid_on']  # total_paid auto, paid_on auto
-
+    # def validate_month(self, value):
+    #     from django.utils import timezone
+    #     if value > timezone.now().date():
+    #         raise serializers.ValidationError("Month cannot be in the future.")
+    #     return value
+    
     def create(self, validated_data):
         from django.utils import timezone
 
@@ -86,8 +91,10 @@ class EmployeeSalarySerializer(serializers.ModelSerializer):
         if EmployeeSalary.objects.filter(employee=validated_data['employee'],  month__year=month_date.year,
         month__month=month_date.month).exists():
             raise serializers.ValidationError(
-                "Salary for this employee for the specified month already exists."
-            )
+                    {
+                        "message": "Salary for this employee for the specified month already exists."
+                    }
+                    )
 
         # create and return the instance
         salary = EmployeeSalary.objects.create(**validated_data)

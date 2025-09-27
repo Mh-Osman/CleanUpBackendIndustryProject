@@ -42,14 +42,14 @@ class EmployeeSalary(models.Model):
     paid_on = models.DateTimeField(null=True, blank=True) # When salary was paid  date will be set automatically
     paid = models.BooleanField(default=False)  # Salary payment status
 
-    class Meta:
-        unique_together = ("employee", "month")  # one salary per month
+    # class Meta:
+    #     unique_together = ("employee", "month")  # one salary per month
     def save(self, *args, **kwargs):
         base_salary = 0
         if hasattr(self.employee, 'employee_profile') and self.employee.employee_profile.base_salary:
             base_salary = self.employee.employee_profile.base_salary
         self.total_paid = base_salary + self.performance_bonus - self.deductions
-        super().save(*args, **kwargs)
+       
           # Custom unique check
         if EmployeeSalary.objects.filter(
             employee=self.employee,
