@@ -2,145 +2,49 @@ from django.db import models
 import uuid
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from users.models import CustomUser
 
-
-class Region(models.Model):
-    """
-    Represents a region/city in Saudi Arabia (like Riyadh, Jeddah).
-    """
-    id = models.AutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=50, unique=True)
-    input_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
-
-    class Meta:
-        verbose_name = "Region"
-        verbose_name_plural = "Regions"
-
-    def save(self, *args, **kwargs):
-        creating = self._state.adding
-
-        try:
-            with transaction.atomic():
-                # Save first if new to get an ID
-                if creating:
-                    super().save(*args, **kwargs)
-
-                # Generate new system code
-                new_code = f"R{self.name}{self.id}"
-
-                # Check for duplicates
-                if Region.objects.filter(code=new_code).exclude(pk=self.pk).exists():
-                    raise ValidationError({"code": f"⚠️ Region with code {new_code} already exists!"})
-
-                # Keep old code in input_code
-                self.input_code = self.code
-                self.code = new_code
-
-                # Save updated fields once
-                super().save(update_fields=["code", "input_code"])
-
-        except IntegrityError:
-            raise ValidationError({"input_code": f"⚠️ Region with input_code '{self.input_code}' already exists!"})
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-
-
+def validate_saudi_postcode(value):
+    if not (1000 <= int(value) <= 9999):
+        raise ValidationError(f"{value} is not a valid Saudi postcode.")
+    return value
 class Building(models.Model):
-    """
-    Represents a building inside a region.
-    """
-    id = models.AutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    name = models.CharField(max_length=150)
-    code = models.CharField(max_length=50, unique=True)
-    input_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="buildings")
-    location = models.CharField(max_length=255, null=True, blank=True)
+    BUILDING_TYPES = [
+        ("residential", "Residential"),
+        ("commercial", "Commercial"),
+    ]
 
-    class Meta:
-        verbose_name = "Building"
-        verbose_name_plural = "Buildings"
-
-    def save(self, *args, **kwargs):
-        creating = self._state.adding
-
-        # First save to get ID if creating
-        super().save(*args, **kwargs)
-
-        # Auto-generate code
-        new_code = f"{self.region.code}B{self.id}"
-
-        # Avoid duplicates
-        if Building.objects.filter(code=new_code).exclude(pk=self.pk).exists():
-            raise ValidationError(f"⚠️ Building with code {new_code} already exists!")
-
-        # Set input_code if empty
-        
-        self.input_code = self.code
-        self.code = new_code
-
-        
-
-        # Save updated fields only if creating
-        if creating:
-            super().save(update_fields=["code", "input_code"])
-        else:
-            super().save(*args, **kwargs)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=BUILDING_TYPES)
+    city = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, default=24.7136)  # Riyadh default
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, default=46.6753)  # Riyadh default
+    created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.region.name}"
-
-from django.core.exceptions import ValidationError
+        return f"{self.name} ({self.city})"
+ 
 
 class Apartment(models.Model):
-    id = models.AutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=120, unique=True, db_index=True)
-    input_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    building = models.ForeignKey("Building", on_delete=models.CASCADE, related_name="apartments")
-    location = models.CharField(max_length=255, null=True, blank=True)
-    floor = models.IntegerField(null=True, blank=True)
-    living_rooms = models.IntegerField(default=1)
-    bedrooms = models.IntegerField(default=1)
-    bathrooms = models.IntegerField(default=1)
-    kitchens = models.IntegerField(default=1)
+    client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="apartments")
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="apartments")
+    apartment_number = models.CharField(max_length=50)
+    floor = models.IntegerField()
+    living_rooms = models.IntegerField()
+    bathrooms = models.IntegerField()
     outdoor_area = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Apartment"
-        verbose_name_plural = "Apartments"
+    postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
+    location = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.name} - {self.building.name}"
+        return f"Apt {self.apartment_number}, {self.building.name}"
 
-    def save(self, *args, **kwargs):
-        creating = self._state.adding
+    def full_address(self):
+        recipient_name = self.client.name if self.client else "Unknown Recipient"
+        street_building = f"{self.building.location}, {self.building.name}"
+        city = self.building.city
+        postcode_line = f"{self.postcode} {city}"
+        country = self.country
+        return f"{recipient_name}\n{street_building}\n{city}\n{postcode_line}\n{country}"
 
-        # Preserve original user-provided code into input_code (first time only)
-        if creating and not self.input_code:
-            self.input_code = self.code  
-
-        # Auto-generate final code
-        new_code = f"{self.building.region.code}{self.building.code}C{self.name}"
-
-        # Check duplicate for system-generated code (before saving)
-        if Apartment.objects.filter(code=new_code).exclude(pk=self.pk).exists():
-            raise ValidationError(
-                {"code": f"⚠️ Apartment with code {new_code} already exists!"}
-            )
-        self.code = new_code  # overwrite with system-generated code
-
-        try:
-            with transaction.atomic():
-                super().save(*args, **kwargs)
-        except IntegrityError:
-            raise ValidationError(
-                {"input_code": f"⚠️ Apartment with input_code '{self.input_code}' already exists!"}
-            )

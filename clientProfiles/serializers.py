@@ -2,9 +2,10 @@ from rest_framework import serializers
 from .models import CustomUser, ClientProfile
 
 class ClientProfileSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = ClientProfile
-        fields = ['location', 'avatar']  # ClientProfile এর ফিল্ডগুলো
+        fields = "__all__"   # ClientProfile এর ফিল্ডগুলো
 
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)
@@ -24,6 +25,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
         # create profile
         ClientProfile.objects.create(user=user, **profile_data)
+
         return user
 
     # ---------------- Update / Patch ----------------
@@ -37,7 +39,7 @@ class ClientSerializer(serializers.ModelSerializer):
         if profile_data:
             ClientProfile.objects.update_or_create(
                 user=instance,
-                defaults=profile_data
+                **profile_data
             )
         return instance
 

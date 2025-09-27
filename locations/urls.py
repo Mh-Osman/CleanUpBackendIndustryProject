@@ -1,14 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegionViewSet, BuildingViewSet, apartmentViewSet, BuildingListView, BuildingDetailView
-
+from .views import  ApartmentViewSet, BuildingViewSet  # Import your viewsets here
 router = DefaultRouter()
-router.register(r'regions', RegionViewSet)
 router.register(r'buildings', BuildingViewSet)
-router.register(r'apartments', apartmentViewSet)
+router.register(r'apartments', ApartmentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path("buildingpage/", BuildingListView.as_view(), name="building-list"),
-    path("buildingpage/<int:pk>/", BuildingDetailView.as_view(), name="building-detail"),
+
 ]
