@@ -42,3 +42,4 @@ class SubscriptionStatusCountSerializer(serializers.Serializer):
     pending = serializers.IntegerField()
     inactive = serializers.IntegerField()
     expired = serializers.IntegerField()
+    total_revinew_last_month=serializers.IntegerField()

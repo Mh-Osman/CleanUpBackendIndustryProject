@@ -12,7 +12,9 @@ from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCo
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
+from django.db.models import Sum
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
 
 class PlanView(viewsets.ModelViewSet):
     queryset=PlanModel.objects.all()
@@ -38,11 +40,14 @@ class SubcriptionFullStatusDetailView(APIView):
     permission_classes=[permissions.IsAdminUser]
 
     def get(self,request):
+        now=timezone.now()
+        one_month_ago = now - timedelta(days=30)
         data={
             'active':Subscription.objects.filter(status='active').count(),
             'pending':Subscription.objects.filter(status='past_due').count(), # its means auto renewal need
             'expired':Subscription.objects.filter(status='canceled').count(),
             'inactive':Subscription.objects.filter(status='inactive').count(),
+            'total_revinew_last_month':SubscriptionHistory.objects.filter(created_at__gte=one_month_ago,action='active').aggregate(total=Sum('amount'))['total'] or 0
 
         }
         serializer=SubscriptionStatusCountSerializer(data)
