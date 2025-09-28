@@ -2,9 +2,15 @@ from rest_framework import serializers
 from .models import CustomUser, ClientProfile
 
 class ClientProfileSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
     class Meta:
         model = ClientProfile
-        fields = ['location', 'avatar']  # ClientProfile এর ফিল্ডগুলো
+        fields = ['location', 'avatar','user_name']  # ClientProfile এর ফিল্ডগুলো
+    def get_user_name(self, obj):
+      print("DEBUG OBJ:", obj, type(obj))
+      if hasattr(obj, "user") and obj.user:
+         return obj.user.name
+      return None
 
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)

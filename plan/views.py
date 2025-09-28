@@ -1,15 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .models import PlanModel, Subscription
+from .models import PlanModel, Subscription,SubscriptionHistory
 import stripe
 from django.conf import settings
 from locations.models import Apartment, Building,Region
 from datetime import datetime, timedelta
 import stripe
 from django.utils import timezone
-from .serializers import PlanSerailzier,SubscribeSerializer
+from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer
 from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class PlanView(viewsets.ModelViewSet):
@@ -24,13 +26,31 @@ class PlanView(viewsets.ModelViewSet):
     
 
 
-class SubscriptionSerializerView(APIView):
+class SubscriptionSerializerView(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
-    def get(self, request, *args, **kwargs):
-        subscription=Subscription.objects.all()
-        serializer=SubscribeSerializer(subscription,many=True)
+    queryset=Subscription.objects.all()
+    serializer_class=SubscribeSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment']      
+
+
+class SubcriptionFullStatusDetailView(APIView):
+    permission_classes=[permissions.IsAdminUser]
+
+    def get(self,request):
+        data={
+            'active':Subscription.objects.filter(status='active').count(),
+            'pending':Subscription.objects.filter(status='past_due').count(), # its means auto renewal need
+            'expired':Subscription.objects.filter(status='canceled').count(),
+            'inactive':Subscription.objects.filter(status='inactive').count(),
+
+        }
+        serializer=SubscriptionStatusCountSerializer(data)
+        return Response(serializer.data)
         
-        return Response(serializer.data)        
+    
+     
+              
         
 
 class CreateCheckoutSession(APIView):
@@ -54,18 +74,31 @@ class CreateCheckoutSession(APIView):
         except Region.DoesNotExist: return Response({"error":"Region not found"},status=404)
 
         
-        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment).first()
+        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status__in=['active','paused','past_due']).first()
+        if subscription :
+            if subscription.status=='active':
+                return Response("You already have this paln on this apartment ! kindly contact with Us !")
+            if subscription.status=='paused':
+                return Response("You Have this plan but it's temporary paused ,contract with admin ")
+            if subscription.status=='past_due':
+                return Response("Recharge your account and contact with admin")
+            
+        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status='inactive').first()
+    
         if subscription and subscription.stripe_customer_id:
             customer_id = subscription.stripe_customer_id
         else:
             customer = stripe.Customer.create(email=user.email)
             customer_id = customer.id
-
+        
  
         session = stripe.checkout.Session.create(
             customer=customer_id,
             payment_method_types=["card"],
-            line_items=[{"price": plan.stripe_price_id, "quantity": 1}],
+            line_items=[
+                {"price": plan.stripe_price_id, 
+                 "quantity": 1}
+                ],
             mode="subscription",
             success_url="http://localhost:3000/success",
             cancel_url="http://localhost:3000/cancel"
@@ -100,7 +133,8 @@ class PauseSubscription(APIView):
 
         if not sub.stripe_subscription_id:
             return Response({"error":"No Stripe subscription ID"}, status=400)
-
+        if sub.status!="active":
+            return Response({"error":"first active you sub'scription"})
     
         try:
           stripe.Subscription.modify(
@@ -125,24 +159,35 @@ class ResumeSubscription(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, subscription_id):
+        
         try:
             sub = Subscription.objects.get(id=subscription_id)
+            print(sub)
         except Subscription.DoesNotExist:
             return Response({"error":"Subscription not found"}, status=404)
         if not sub.stripe_subscription_id:
             return Response({"error":"No Stripe subscription ID"}, status=400)
+        if sub.status!="paused":
+            return Response({"error":"first paused your sub'scription"})
         try:
             stripe_sub=stripe.Subscription.modify(
             sub.stripe_subscription_id,
             pause_collection=None
         )
+            print(stripe_sub)
         except stripe.error.InvalidRequestError as e:
           return Response({"error": f"Stripe error: {str(e)}"}, status=400)
         print(stripe_sub.get('status'))
-        sub.status = stripe_sub.get("status", "active")  # fallback to active
-        # Only update if the subscription was paused and resumed
+        sub.status = stripe_sub.get("status", "active")  
         sub.pause_until = None 
         sub.save()
+        SubscriptionHistory.objects.create(
+              subscription=sub,
+              amount=sub.plan.amount,
+              action="resumed",
+              start_date=sub.start_date,
+              end_date=sub.current_period_end
+              )
        
         return Response({"message":"Resume requested. DB will auto-update via webhook."})
 

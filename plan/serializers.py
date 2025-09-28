@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PlanModel,Subscription
+from .models import PlanModel,Subscription,SubscriptionHistory
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuilingSerializer,ApartmentSerializer,RegionSerializer
 from datetime import datetime
@@ -26,3 +26,19 @@ class SubscribeSerializer(serializers.ModelSerializer):
             delta = obj.current_period_end.date() - datetime.now().date()
             return max(delta.days, 0)
         return 0
+
+
+
+class SubscriptionHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        user=Subscription
+        fields='__all__'
+
+
+
+
+class SubscriptionStatusCountSerializer(serializers.Serializer):
+    active = serializers.IntegerField()
+    pending = serializers.IntegerField()
+    inactive = serializers.IntegerField()
+    expired = serializers.IntegerField()
