@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from locations.models import Apartment,Building
+from locations.models import Apartment,Building,Region
 from datetime import datetime,timezone
 # Create your models here.
 
@@ -30,15 +30,16 @@ class Subscription(models.Model):
     STATUS_CHOICES = (
         ("active","Active"),
         ("inactive","Inactive"),
-        ("past_due","Past Due"),
         ("paused","Paused"),
         ("canceled","Canceled"),
+        ("past_due","past_due"),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     plan = models.ForeignKey("PlanModel", on_delete=models.SET_NULL, null=True)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
     apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True)
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
     stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="inactive")
@@ -49,11 +50,7 @@ class Subscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
 
-    def remaining_days(self):
-        if self.current_period_end:
-            delta = self.current_period_end - datetime.now()
-            return max(delta.days, 0)
-        return 0
+
 
     def __str__(self):
         return f"{self.user} - {self.plan} ({self.status}) id is {self.id}"

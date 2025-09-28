@@ -40,9 +40,12 @@ ALLOWED_HOSTS = [
     "randomid.ngrok-free.app",
     'lisa-nondisposable-judgingly.ngrok-free.app',
     '1f77637a09c0.ngrok-free.app',
+    '080cc1fbbf23.ngrok-free.app',
+
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://1f77637a09c0.ngrok-free.app",
+    'https://080cc1fbbf23.ngrok-free.app',
 ]
 
 

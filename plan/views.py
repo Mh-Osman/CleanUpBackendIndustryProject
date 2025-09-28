@@ -4,22 +4,34 @@ from rest_framework import permissions
 from .models import PlanModel, Subscription
 import stripe
 from django.conf import settings
-from locations.models import Apartment, Building
+from locations.models import Apartment, Building,Region
 from datetime import datetime, timedelta
 import stripe
-from .serializers import PlanSerailzier
+from django.utils import timezone
+from .serializers import PlanSerailzier,SubscribeSerializer
 from rest_framework import viewsets
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class PlanView(viewsets.ModelViewSet):
     queryset=PlanModel.objects.all()
     serializer_class=PlanSerailzier
-    # permission_classes=[permissions.IsAdminUser]
+    
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+    
+
+
+class SubscriptionSerializerView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+    def get(self, request, *args, **kwargs):
+        subscription=Subscription.objects.all()
+        serializer=SubscribeSerializer(subscription,many=True)
+        
+        return Response(serializer.data)        
+        
 
 class CreateCheckoutSession(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -28,25 +40,28 @@ class CreateCheckoutSession(APIView):
         plan_id = request.data.get("plan_id")
         building_id = request.data.get("building_id")
         apartment_id = request.data.get("apartment_id")
+        region_id=request.data.get('region_id')
         user = request.user
 
-        # get plan, building, apartment
+        
         try: plan = PlanModel.objects.get(id=plan_id)
         except PlanModel.DoesNotExist: return Response({"error":"plan not found"}, status=404)
         try: building = Building.objects.get(id=building_id)
         except Building.DoesNotExist: return Response({"error":"Building not found"}, status=404)
         try: apartment = Apartment.objects.get(id=apartment_id)
         except Apartment.DoesNotExist: return Response({"error":"Apartment not found"}, status=404)
+        try:region=Region.objects.get(id=region_id)
+        except Region.DoesNotExist: return Response({"error":"Region not found"},status=404)
 
-        # check existing subscription
-        subscription = Subscription.objects.filter(user=user, plan=plan, building=building).first()
+        
+        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment).first()
         if subscription and subscription.stripe_customer_id:
             customer_id = subscription.stripe_customer_id
         else:
             customer = stripe.Customer.create(email=user.email)
             customer_id = customer.id
 
-        # create checkout session
+ 
         session = stripe.checkout.Session.create(
             customer=customer_id,
             payment_method_types=["card"],
@@ -56,7 +71,7 @@ class CreateCheckoutSession(APIView):
             cancel_url="http://localhost:3000/cancel"
         )
 
-        # create/update subscription
+
         if not subscription:
             subscription = Subscription.objects.create(
                 user=user,
@@ -64,7 +79,8 @@ class CreateCheckoutSession(APIView):
                 stripe_customer_id=customer_id,
                 status="inactive",
                 building=building,
-                apartment=apartment
+                apartment=apartment,
+                region=region
             )
         else:
             subscription.stripe_customer_id = customer_id
@@ -85,7 +101,7 @@ class PauseSubscription(APIView):
         if not sub.stripe_subscription_id:
             return Response({"error":"No Stripe subscription ID"}, status=400)
 
-        # Pause subscription in Stripe
+    
         try:
           stripe.Subscription.modify(
             sub.stripe_subscription_id,
@@ -96,7 +112,7 @@ class PauseSubscription(APIView):
          )
         except stripe.error.InvalidRequestError as e:
           return Response({"error": f"Stripe error: {str(e)}"}, status=400)
-        # Immediately update DB
+       
         sub.status = "paused"
         sub.pause_until = datetime.now() + timedelta(days=30)
         sub.save()
@@ -124,7 +140,8 @@ class ResumeSubscription(APIView):
           return Response({"error": f"Stripe error: {str(e)}"}, status=400)
         print(stripe_sub.get('status'))
         sub.status = stripe_sub.get("status", "active")  # fallback to active
-        sub.pause_until = None
+        # Only update if the subscription was paused and resumed
+        sub.pause_until = None 
         sub.save()
        
         return Response({"message":"Resume requested. DB will auto-update via webhook."})

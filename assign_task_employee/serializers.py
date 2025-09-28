@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import TaskAssignToEmployee
 from locations.models import Building, Apartment
+from locations.serializers import BuilingSerializer
 from services_pakages.models import Category
 from django.contrib.auth import get_user_model
 from services_pakages.serializers import CategorySerializer
@@ -9,12 +10,13 @@ User = get_user_model()
 
 class TaskAssignToEmployeeSerializer(serializers.ModelSerializer):
     # category=CategorySerializer(many=True)
+    # building=BuilingSerializer(read_only=True)
     class Meta:
         model = TaskAssignToEmployee
         fields = [
             "id",
             "name",
-            "service_code",
+            "plan",
             "description",
             "category",
             "base_price",
@@ -29,5 +31,6 @@ class TaskAssignToEmployeeSerializer(serializers.ModelSerializer):
             "service_icon",
             "status",
             "apratment",
+            "package",
         ]
         read_only_fields = ["created_at", "updated_at","id"]

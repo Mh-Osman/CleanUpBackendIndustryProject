@@ -19,12 +19,12 @@ class Region(models.Model):
 
     def save(self, *args, **kwargs):
         if self.id is None:
-            super().save(*args, **kwargs)  # Save first to get an ID
-        self.code = 'R'+self.name+str(self.id)  # Auto-generate code based on ID code by default
+            super().save(*args, **kwargs)  
+        self.code = 'R'+self.name+str(self.id)  
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} ({self.code})"
+        return f"{self.name} ({self.code} {self.id}"
 
 
 class Building(models.Model):

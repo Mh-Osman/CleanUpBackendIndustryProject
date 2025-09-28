@@ -1,7 +1,7 @@
 from django.urls import path,include
 
 from rest_framework.routers import DefaultRouter
-from .views import CreateCheckoutSession,PlanView,PauseSubscription,ResumeSubscription,StopSubscription
+from .views import CreateCheckoutSession,PlanView,PauseSubscription,ResumeSubscription,StopSubscription,SubscriptionSerializerView
 from .webhooks import stripe_webhook
 router =DefaultRouter()
 router.register('list',PlanView,basename='plan')
@@ -13,4 +13,5 @@ urlpatterns = [
     path("subscription/<int:subscription_id>/stop/", StopSubscription.as_view()),
     path("subscription/<int:subscription_id>/resume/", ResumeSubscription.as_view()),
     path("webhook/",stripe_webhook, name="stripe-webhook"),
+    path("subscription/",SubscriptionSerializerView.as_view()),
 ]

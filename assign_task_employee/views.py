@@ -8,7 +8,7 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
     
     queryset = TaskAssignToEmployee.objects.all()
     serializer_class = TaskAssignToEmployeeSerializer
-    # permission_classes = [IsAdminUser]  
+    permission_classes = [IsAdminUser]  
 
     # Optional: filter by worker
     # def get_queryset(self):
