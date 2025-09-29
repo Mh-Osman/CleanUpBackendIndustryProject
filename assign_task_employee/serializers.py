@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from services_pakages.serializers import CategorySerializer
 from .models import FeatureModel
 from django.db.models import Sum
+
 User = get_user_model()
 
 
@@ -112,3 +113,4 @@ class ServiceDetailsSerializer(serializers.ModelSerializer):
 
     def get_total_booking(self, obj):
         return TaskAssignToEmployee.objects.filter(id=obj.id).count()
+

@@ -57,7 +57,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name','phone']
 
     def __str__(self):
-        return f"{self.name} ({self.user_type})"
+        return f"{self.name} ({self.user_type} {self.id})"
 
 # ----------------------------
 # OTP Model

@@ -4,6 +4,7 @@ from locations.models import Apartment,Building,Region
 from datetime import datetime,timezone
 from clientProfiles.models import ClientProfile
 from django.contrib.auth import get_user_model
+
 User=get_user_model()
 # Create your models here.
 
@@ -73,8 +74,50 @@ class SubscriptionHistory(models.Model):
     def __str__(self):
         return f'{self.action} {self.amount} {self.created_at}'
 
-    # def clean(self):
-    #     if self.subscription:
-    #         if self.subscription.plan:
-    #             amount=self.subscription.plan.amount
+
+invoice_status=(
+    ('paid','paid'),
+    ('unpaid','unpaid')
+)
+
+class InvoiceModel(models.Model):
+    INVOICE_TYPE_CHOICES = [
+        ("outgoing", "Outgoing (Sales)"),
+        ("incoming", "Incoming (Expenses)"),
+    ]
     
+    invoice_id = models.CharField(max_length=100, unique=True)
+    type = models.CharField(max_length=20, choices=INVOICE_TYPE_CHOICES)
+    date_issued = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
+    status=models.CharField(choices=invoice_status,blank=True,null=True)
+    building = models.ForeignKey(Building, on_delete=models.SET_NULL,null=True,blank=True)
+    client = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    vendor= models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='invoice_vendor')
+    apartments = models.ManyToManyField(Apartment)
+    plan = models.ForeignKey(PlanModel, on_delete=models.SET_NULL, null=True, blank=True)
+    vendor_invoice_file = models.FileField(upload_to="vendor_invoices", blank=True, null=True)
+    note = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to="invoices", blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    @property
+    def calculated_total(self):
+        return sum(item.total for item in self.line_items.all())
+
+    def __str__(self):
+        return f"{self.invoice_id} - {self.type}"
+
+
+class InvoiceLineItem(models.Model):
+    invoice = models.ForeignKey(InvoiceModel, on_delete=models.CASCADE, related_name="line_items")
+    description = models.CharField(max_length=255)
+    service = models.ForeignKey('assign_task_employee.FeatureModel', on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    @property
+    def total(self):
+        return (self.quantity * self.unit_price) - self.discount + self.tax
+

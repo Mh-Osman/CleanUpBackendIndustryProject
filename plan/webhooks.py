@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.conf import settings
-from .models import Subscription
+from .models import Subscription,InvoiceModel
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 # from datetime import datetime
@@ -68,6 +68,21 @@ def stripe_webhook(request):
               action="active",
               start_date=sub.start_date,
               end_date=sub.current_period_end)
+            invoice = InvoiceModel.objects.create(
+                invoice_id=obj["id"],
+                type="outgoing",
+                date_issued=sub.start_date.date(),
+                due_date=sub.current_period_end.date(),
+                client=sub.user,
+                plan=sub.plan,
+                note=f"Stripe invoice {obj['id']}",
+                status="paid",
+                total_amount=sub.plan.amount,
+                building=sub.building,
+               
+                )
+            invoice.apartments.set([sub.apartment])
+        
         
        
             
@@ -133,9 +148,6 @@ def stripe_webhook(request):
                 sub.pause_until = None
                 
                 
-              
-
-            
             
             sub.save()
 

@@ -1,18 +1,19 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .models import PlanModel, Subscription,SubscriptionHistory
+from .models import PlanModel, Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem
 import stripe
 from django.conf import settings
 from locations.models import Apartment, Building,Region
 from datetime import datetime, timedelta
 import stripe
 from django.utils import timezone
-from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer
+from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from django.db.models import Sum
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -216,3 +217,12 @@ class StopSubscription(APIView):
 
 
 
+
+
+# invoice 
+
+
+class InvoiceView(viewsets.ModelViewSet):
+    queryset=InvoiceModel.objects.all()
+    serializer_class=InvoiceSerializer
+    # permission_classes=[permissions.IsAdminUser]

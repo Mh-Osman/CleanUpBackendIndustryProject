@@ -38,3 +38,5 @@ class ServiceDetailsListView(ListAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = ServiceDetailsSerializer
     queryset = TaskAssignToEmployee.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment'] 
