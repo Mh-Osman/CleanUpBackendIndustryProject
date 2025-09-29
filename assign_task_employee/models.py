@@ -4,6 +4,7 @@ from locations.models import Building,Apartment
 from services_pakages.models import Category
 from employeeProfiles.models import EmployeeProfile
 from plan.models import PlanModel
+from rest_framework.response import Response
 
 User=get_user_model()
 
@@ -15,19 +16,13 @@ BILL_CYCLE=(
     ('yearly','Yearly'),
 )
 
-#Dummy building
-# class Building(models.Model):
-#     name=models.CharField(max_length=100)
 
-# # dummy apartment
-# class Apartment(models.Model):
-#     name=models.CharField(max_length=100)
-#     building=models.ForeignKey(Building,on_delete=models.CASCADE)
 
-STASTUS=(
-    ('active','active'),
-    ('pending','pending'),
-    ('stop','stop'),
+STATUS=(
+    ('completed','completed'),
+    ('started','started'),
+    ('canceled','canceled'),
+    ('pending','pending')
 )
 
 
@@ -59,9 +54,16 @@ class TaskAssignToEmployee(models.Model):
     service_icon=models.ImageField(upload_to='./service/icon',blank=True,null=True)
     status=models.BooleanField(default=True)
     tax_rate=models.CharField(null=True,blank=True)
+    status=models.CharField(choices=STATUS,blank=True,null=True,default='pending')
 
     # class Meta:
     #     unique_together = ('employee', 'building','appartment')
 
     def __str__(self):
         return f'Task name {self.name} id is {self.id}'
+    
+    def clean_category(self):
+     value = self.cleaned_data.get("category")
+     if not value:
+        raise models.ValidationError("Choose a valid category")
+     return value
