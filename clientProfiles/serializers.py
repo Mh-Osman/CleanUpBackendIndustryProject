@@ -37,10 +37,12 @@ class ClientSerializer(serializers.ModelSerializer):
 
         # update or create profile
         if profile_data:
-            ClientProfile.objects.update_or_create(
-                user=instance,
-                **profile_data
-            )
+            profile, created = ClientProfile.objects.get_or_create(user=instance)
+            # Use serializer for validation
+            profile_serializer = ClientProfileSerializer(profile, data=profile_data, partial=True)
+            profile_serializer.is_valid(raise_exception=True)
+            profile_serializer.save()
+
         return instance
 
     # ---------------- Field validation ----------------
