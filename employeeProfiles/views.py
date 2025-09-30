@@ -5,9 +5,13 @@ from rest_framework import status, decorators, response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer
+from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer,EmployOverView
 from rest_framework.permissions import IsAdminUser
-
+from rest_framework.views import APIView
+from invoice_request_from_client.models import InvoiceRequestFromEmployee
+from django.db.models import Sum,Q
+from assign_task_employee.models import TaskAssignToEmployee
+# from .models import EmployeeProfile, InvoiceRequestFromEmployee
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -58,3 +62,39 @@ class EmpployeeSalaryViewSet(viewsets.ModelViewSet):
             return response.Response({"error": "No salary found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(salary)
         return response.Response(serializer.data)
+    
+
+
+
+
+
+class EmployeeOverviewViewset(APIView):
+    permission_classes=[IsAdminUser]
+    def get(self, request):
+
+        tasks = TaskAssignToEmployee.objects.all()
+        total_tasks = tasks.count() or 1  # avoid division by zero
+        completed = tasks.filter(status='completed').count()
+        started = tasks.filter(status='started').count()
+        assigned = tasks.filter(status='pending').count()
+        canceled = tasks.filter(status='canceled').count()
+
+        # Simple performance formula
+        average_performance = (
+            (completed * 100 + started * 50 + assigned * 20 + canceled * 0) / total_tasks
+        )
+        overview = {
+            "active": EmployeeProfile.objects.filter(
+                status='Active',
+                user__user_type='employee'
+            ).count(),
+            "leave": EmployeeProfile.objects.filter(
+               Q(is_on_leave=True) | Q(status='On Leave'),
+                user__user_type='employee'
+            ).count(),
+            "total_payroll": InvoiceRequestFromEmployee.objects.filter(
+                status="Submitted"
+            ).aggregate(total=Sum('amount'))['total'] or 0,
+            "average_performance": average_performance,
+        }
+        return Response(overview)

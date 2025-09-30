@@ -89,11 +89,17 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return invoice
     
     def get_building_name(self,obj):
-        return obj.building.name
+        if obj.building:
+            return obj.building.name
+        return None
+    
     def get_apartment_name(self,obj):
         name=[]
-        for apr in obj.apartments.all():
+        if obj.apartments:
+         for apr in obj.apartments.all():
             name.append(apr.name)
         return name
+    
     def get_region_name(self,obj):
-        return obj.building.region.name
+        if obj.building and obj.building.region:
+          return obj.building.region.name

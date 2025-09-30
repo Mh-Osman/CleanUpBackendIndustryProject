@@ -52,7 +52,7 @@ class TaskAssignToEmployee(models.Model):
     package=models.ManyToManyField(FeatureModel)
     updated_at=models.DateField(auto_now=True)
     service_icon=models.ImageField(upload_to='./service/icon',blank=True,null=True)
-    status=models.BooleanField(default=True)
+    # status=models.BooleanField(default=True)
     tax_rate=models.CharField(null=True,blank=True)
     status=models.CharField(choices=STATUS,blank=True,null=True,default='pending')
 

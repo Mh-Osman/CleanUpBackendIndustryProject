@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from locations.models import Apartment,Building,Region
+from services_pakages.models import Category
 from datetime import datetime,timezone
 from clientProfiles.models import ClientProfile
 from django.contrib.auth import get_user_model
@@ -12,7 +13,7 @@ class PlanModel(models.Model):
     name = models.CharField(max_length=100)  
     plan_code = models.CharField(max_length=50, unique=True)  
     stripe_price_id = models.CharField(max_length=100) 
-    amount = models.IntegerField(help_text="Price in cents")  
+    amount = models.IntegerField()  
     interval = models.CharField(
         max_length=20,
         choices=(("month", "Monthly"), ("year", "Yearly")),
@@ -20,12 +21,15 @@ class PlanModel(models.Model):
     )
     description = models.TextField(blank=True, null=True)  
     is_active = models.BooleanField(default=True)  
-
+    discount=models.IntegerField(blank=True,null=True,default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    auto_renewal=models.BooleanField(default=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'{self.plan_code} - {self.name}'
-
+    # @property
+    # def amount_after_discount(self):
+    #     return self.amount-self.discount
 
 
 class Subscription(models.Model):
@@ -93,13 +97,15 @@ class InvoiceModel(models.Model):
     status=models.CharField(choices=invoice_status,blank=True,null=True)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL,null=True,blank=True)
     client = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    vendor= models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='invoice_vendor')
     apartments = models.ManyToManyField(Apartment)
     plan = models.ForeignKey(PlanModel, on_delete=models.SET_NULL, null=True, blank=True)
+    vendor_name=models.CharField(blank=True,null=True)
+    vendor= models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='invoice_vendor')
     vendor_invoice_file = models.FileField(upload_to="vendor_invoices", blank=True, null=True)
     note = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to="invoices", blank=True, null=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expense_category=models.ManyToManyField(Category)
     @property
     def calculated_total(self):
         return sum(item.total for item in self.line_items.all())

@@ -38,14 +38,11 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "randomid.ngrok-free.app",
-    'lisa-nondisposable-judgingly.ngrok-free.app',
-    '1f77637a09c0.ngrok-free.app',
-    '080cc1fbbf23.ngrok-free.app',
+    ".ngrok-free.app",
 
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://1f77637a09c0.ngrok-free.app",
-    'https://080cc1fbbf23.ngrok-free.app',
+    "https://398bac921dd6.ngrok-free.app",
 ]
 
 
@@ -93,6 +90,8 @@ INSTALLED_APPS = [
     'employeeProfiles',
     'assign_task_employee',
     'plan',
+    'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
+    
     
     
 ]

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import EmployeeProfile, EmployeeSalary, Attendance, EmployeeApartmentAssignment
 from users.models import CustomUser
+from invoice_request_from_client.models import InvoiceRequestFromEmployee
 
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,3 +91,15 @@ class EmployeeSalarySerializer(serializers.ModelSerializer):
         # create and return the instance
         salary = EmployeeSalary.objects.create(**validated_data)
         return salary
+
+
+
+
+
+
+class EmployOverView(serializers.Serializer):
+    active = serializers.SerializerMethodField(read_only=True)
+    leave = serializers.SerializerMethodField(read_only=True)
+    total_payroll = serializers.SerializerMethodField(read_only=True)
+    average_performance=serializers.SerializerMethodField(read_only=True)
+

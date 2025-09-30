@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/v1/', include('employeeProfiles.urls')),
     path('api/task/',include('assign_task_employee.urls')), 
     path('api/plan/',include('plan.urls')),
+    path('api/invoice_request_from_client/',include('invoice_request_from_client.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
