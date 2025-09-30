@@ -45,7 +45,7 @@ class TaskAssignToEmployeeSerializer(serializers.ModelSerializer):
     def get_active(self,obj):
         return TaskAssignToEmployee.objects.filter(status='started').count()
     def get_total_revenue(self, obj):
-        total = TaskAssignToEmployee.objects.filter(id=obj.id, status='completed').aggregate(
+        total = TaskAssignToEmployee.objects.filter(status='completed').aggregate(
             total_amount=Sum('base_price')
         )['total_amount']
         return total or 0
@@ -99,18 +99,18 @@ class ServiceDetailsSerializer(serializers.ModelSerializer):
    
 
     def get_active(self,obj):
-        return TaskAssignToEmployee.objects.filter(id=obj.id,status='started').count()
+        return TaskAssignToEmployee.objects.filter(plan=obj.plan,status='started').count()
     def get_completed(self,obj):
-        return TaskAssignToEmployee.objects.filter(id=obj.id,status='completed').count()
+        return TaskAssignToEmployee.objects.filter(plan=obj.plan,status='completed').count()
     def get_pending(self,obj):
-        return TaskAssignToEmployee.objects.filter(id=obj.id,status='pending').count()
+        return TaskAssignToEmployee.objects.filter(plan=obj.plan,status='pending').count()
     def get_revenue(self, obj):
         
-        total = TaskAssignToEmployee.objects.filter(id=obj.id, status='completed').aggregate(
+        total = TaskAssignToEmployee.objects.filter(plan=obj.plan, status='completed').aggregate(
             total_amount=Sum('base_price')
         )['total_amount']
         return total or 0
 
     def get_total_booking(self, obj):
-        return TaskAssignToEmployee.objects.filter(id=obj.id).count()
+        return TaskAssignToEmployee.objects.filter(plan=obj.plan).count()
 
