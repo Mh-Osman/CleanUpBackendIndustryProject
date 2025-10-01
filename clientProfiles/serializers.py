@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import CustomUser, ClientProfile
 
 class ClientProfileSerializer(serializers.ModelSerializer):
+<<<<<<< HEAD
     user_name = serializers.SerializerMethodField()
     class Meta:
         model = ClientProfile
@@ -11,6 +12,12 @@ class ClientProfileSerializer(serializers.ModelSerializer):
       if hasattr(obj, "user") and obj.user:
          return obj.user.name
       return None
+=======
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = ClientProfile
+        fields = "__all__"   # ClientProfile এর ফিল্ডগুলো
+>>>>>>> gani
 
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)
@@ -30,6 +37,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
         # create profile
         ClientProfile.objects.create(user=user, **profile_data)
+
         return user
 
     # ---------------- Update / Patch ----------------
@@ -41,10 +49,12 @@ class ClientSerializer(serializers.ModelSerializer):
 
         # update or create profile
         if profile_data:
-            ClientProfile.objects.update_or_create(
-                user=instance,
-                defaults=profile_data
-            )
+            profile, created = ClientProfile.objects.get_or_create(user=instance)
+            # Use serializer for validation
+            profile_serializer = ClientProfileSerializer(profile, data=profile_data, partial=True)
+            profile_serializer.is_valid(raise_exception=True)
+            profile_serializer.save()
+
         return instance
 
     # ---------------- Field validation ----------------

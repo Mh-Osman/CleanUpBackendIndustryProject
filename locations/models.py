@@ -1,6 +1,10 @@
 from django.db import models
 import uuid
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+from users.models import CustomUser
 
+<<<<<<< HEAD
 from django.forms import ValidationError
 
 
@@ -27,57 +31,59 @@ class Region(models.Model):
         return f"{self.name} ({self.code} {self.id}"
 
 
+=======
+def validate_saudi_postcode(value):
+    if not (1000 <= int(value) <= 9999):
+        raise ValidationError(f"{value} is not a valid Saudi postcode.")
+    return value
+>>>>>>> gani
 class Building(models.Model):
-    """
-    Represents a building inside a region.
-    """
-    id = models.AutoField(primary_key=True)  # integer id
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # extra uuid
-    name = models.CharField(max_length=150)   # e.g. Building 101
-    code = models.CharField(max_length=50, unique=True)  # Building code, e.g. RYD-B1
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="buildings")
+    BUILDING_TYPES = [
+        ("residential", "Residential"),
+        ("commercial", "Commercial"),
+    ]
 
-    class Meta:
-        verbose_name = "Building"
-        verbose_name_plural = "Buildings"
-    def save(self, *args, **kwargs):
-        if self.id is None:
-            super().save(*args, **kwargs)  # Save first to get an ID    
-        self.code = f"{self.region.code}B{self.id}"  # Auto-generate code if empty example Building code = RYD-B1
-        super().save(*args, **kwargs)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=BUILDING_TYPES)
+    city = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, default=24.7136)  # Riyadh default
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, default=46.6753)  # Riyadh default
+    created_at = models.DateField(auto_now_add=True)
+
     def __str__(self):
+<<<<<<< HEAD
         return f"{self.name} - {self.region.name} {self.id}"
 
+=======
+        return f"{self.name} ({self.city})"
+ 
+>>>>>>> gani
 
 class Apartment(models.Model):
-    """
-    Represents an individual apartment inside a building.
-    Code is auto-generated as: regionCode-buildingCode-clientCode
-    Example: RYD-B1-CL12
-    """
-    id = models.AutoField(primary_key=True)  # Integer PK
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # Safe future-proof ID
-    name = models.CharField(max_length=100)  # e.g. Apt 302
-    code = models.CharField(max_length=120, unique=True, db_index=True)  # indexed for fast search
-    building = models.ForeignKey("Building", on_delete=models.CASCADE, related_name="apartments")
+    client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="apartments")
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="apartments")
+    apartment_number = models.CharField(max_length=50)
+    floor = models.IntegerField()
+    living_rooms = models.IntegerField()
+    bathrooms = models.IntegerField()
+    outdoor_area = models.BooleanField(default=False)
+    postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
+    location = models.CharField(max_length=255)
 
-    class Meta:
-        verbose_name = "Apartment"
-        verbose_name_plural = "Apartments"
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(fields=['building', 'client', 'apartment_number'], name='unique_apartment_per_building')
+    #     ]
 
     def __str__(self):
-        return f"{self.name} - {self.building.name}"
+        return f"Apt {self.apartment_number}, {self.building.name}"
 
+    def full_address(self):
+        recipient_name = self.client.name if self.client else "Unknown Recipient"
+        street_building = f"{self.building.location}, {self.building.name}"
+        city = self.building.city
+        postcode_line = f"{self.postcode} {city}"
+        country = self.country
+        return f"{recipient_name}\n{street_building}\n{city}\n{postcode_line}\n{country}"
 
-    def save(self, *args, **kwargs):
-        
-        # client-based code জেনারেট করতে গেলে ClientApartment ট্র্যাক করতে হবে
-        # তাই আমরা প্রথম save এ শুধু Building/Region কোড রাখব
-        if self.id is None:
-            super().save(*args, **kwargs)  # Save first to get an ID    
-        self.code = f"{self.building.region.code}{self.building.code}{'C'}{self.name}"
-         # check duplicate manually (ignore self.pk if updating)
-        if Apartment.objects.filter(code=self.code).exclude(pk=self.pk).exists():
-            raise ValidationError(f"⚠️ Apartment with code {self.code} already exists!")
-        super().save(*args, **kwargs)
-        

@@ -46,20 +46,27 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+   
+    "https://*.ngrok-free.app"
+]
 
 # DRF JWT Authentication
 REST_FRAMEWORK = {
+    
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
+        'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
 
@@ -86,13 +93,18 @@ INSTALLED_APPS = [
     'users',
     'locations',
     'clientProfiles',
-    'services_pakages',
+    #services_pakages',
     'employeeProfiles',
+<<<<<<< HEAD
     'assign_task_employee',
     'plan',
     'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
     
     
+=======
+    'drf_yasg',
+   
+>>>>>>> gani
     
 ]
 

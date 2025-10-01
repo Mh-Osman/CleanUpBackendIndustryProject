@@ -4,5 +4,5 @@ from django.contrib import admin
 from .models import ClientProfile
 admin.site.register(ClientProfile)
 
-from .models import ClientApartment
-admin.site.register(ClientApartment)
+# from .models import ClientApartment
+# admin.site.register(ClientApartment)
