@@ -37,6 +37,11 @@ class Apartment(models.Model):
     postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
     location = models.CharField(max_length=255)
 
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(fields=['building', 'client', 'apartment_number'], name='unique_apartment_per_building')
+    #     ]
+
     def __str__(self):
         return f"Apt {self.apartment_number}, {self.building.name}"
 

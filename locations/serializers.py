@@ -23,70 +23,72 @@ class ApartmentSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='client'), required=True, allow_null=True)
     building = BuildingSerializer(required=False)
     building_id = serializers.PrimaryKeyRelatedField(queryset=Building.objects.all(), source='building', write_only=True, required=False)
+
     class Meta:
         model = Apartment
         fields = "__all__"
         read_only_fields = ['id']
+        UniqueTogether = ('building', 'client', 'apartment_number')
     
     
-    def validate(self, attrs):
-        client = attrs.get("client")
-        building_data = attrs.get("building") 
-        building_instance = attrs.get("building_id")
-        apartment_number = attrs.get("apartment_number")
+    # def validate(self, attrs):
+    #     client = attrs.get("client")
+    #     building_data = attrs.get("building") 
+    #     building_instance = attrs.get("building_id")
+    #     apartment_number = attrs.get("apartment_number")
 
-        if isinstance(building_data, Building):
+    #     if isinstance(building_data, Building):
 
-            if client and building_data:
+    #         if client and building_data:
 
-                qs = Apartment.objects.filter(
-                client=client, 
-                building=building_data, 
-                apartment_number=apartment_number, 
+    #             qs = Apartment.objects.filter(
+    #             client=client, 
+    #             building=building_data, 
+    #             apartment_number=apartment_number, 
                 
-            )
+    #         )
             
-            if self.instance:
-                    qs = qs.exclude(pk=self.instance.pk)
+    #         if self.instance:
+    #                 qs = qs.exclude(pk=self.instance.pk)
                 
-            if qs.exists():
-                 raise serializers.ValidationError(
-                    "This apartment is already assigned to this client in the same building."
-                )
-            print("hello")
-            attrs["building"] = building_data
-            return attrs
-        if isinstance(building_data, dict):
-            if building_data:
-                building_instance, created = Building.objects.get_or_create(
-                            name=building_data['name'],
-                            type=building_data['type'],
-                            city=building_data['city'],
-                            location=building_data.get('location', "Unknown"),
-                            defaults={
-                                'latitude': building_data.get('latitude', 24.7136),
-                                'longitude': building_data.get('longitude', 46.6753),
-                            }
-                        )
-            building = building_instance
-            if not building_instance:
-                raise serializers.ValidationError("Either building or building_id is required")
+    #         if qs.exists():
+    #              raise serializers.ValidationError(
+    #                 "This apartment is already assigned to this client in the same building."
+    #             )
+    #         print("hello")
+    #         attrs["building"] = building_data
+    #         return attrs
+    #     if isinstance(building_data, dict):
+    #         if building_data:
+    #             building_instance, created = Building.objects.get_or_create(
+    #                         name=building_data['name'],
+    #                         type=building_data['type'],
+    #                         city=building_data['city'],
+    #                         location=building_data.get('location', "Unknown"),
+    #                         defaults={
+    #                             'latitude': building_data.get('latitude', 24.7136),
+    #                             'longitude': building_data.get('longitude', 46.6753),
+    #                         }
+    #                     )
+    #         building = building_instance
+    #         if not building_instance:
+    #             raise serializers.ValidationError("Either building or building_id is required")
             
 
-            apartment_number = attrs.get("apartment_number")
-            floor = attrs.get("floor")
+    #         apartment_number = attrs.get("apartment_number")
+    #         floor = attrs.get("floor")
 
-            if client and building:
-                if Apartment.objects.filter(
-                    client=client, 
-                    building=building, 
-                    apartment_number=apartment_number, 
-                    floor=floor
-                ).exists():
-                    raise serializers.ValidationError(
-                        "This apartment is already assigned to this client in the same building."
-                    )
-            return attrs
+    #         if client and building:
+    #             if Apartment.objects.filter(
+    #                 client=client, 
+    #                 building=building, 
+    #                 apartment_number=apartment_number, 
+    #                 floor=floor
+    #             ).exists():
+    #                 raise serializers.ValidationError(
+    #                     "This apartment is already assigned to this client in the same building."
+    #                 )
+    #         return attrs
    
     def create(self, validated_data):
         try:

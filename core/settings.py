@@ -41,6 +41,10 @@ ALLOWED_HOSTS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+   
+    "https://*.ngrok-free.app"
+]
 
 # DRF JWT Authentication
 REST_FRAMEWORK = {
