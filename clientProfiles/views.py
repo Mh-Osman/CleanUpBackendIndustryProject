@@ -1,11 +1,11 @@
-# views.py
-from rest_framework import viewsets
-from users.models import CustomUser
+from rest_framework import viewsets, permissions
+from .models import CustomUser
 from .serializers import ClientSerializer
-from rest_framework.permissions import IsAdminUser
 
 class ClientViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(role='client').select_related('client_profile')
+    queryset = CustomUser.objects.filter(user_type='client')
     serializer_class = ClientSerializer
-    permission_classes = [IsAdminUser]
-    
+    permission_classes = [permissions.IsAuthenticated]
+
+    filterset_fields = ['name', 'email']
+    search_fields = ['name', 'email']

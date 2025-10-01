@@ -1,0 +1,105 @@
+from rest_framework import serializers
+from .models import EmployeeProfile, EmployeeSalary, Attendance, EmployeeApartmentAssignment
+from users.models import CustomUser
+from invoice_request_from_client.models import InvoiceRequestFromEmployee
+
+class EmployeeProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployeeProfile
+        fields = ['id', 'department', 'role', 'shift', 'is_on_leave', 'location', 'national_id', 'contact_number', 'location', 'contract_start', 'contract_end', 'base_salary']
+        read_only_fields = ['contract_start']
+        extra_kwargs = {
+            'national_id': {'validators': []}  # DRF এর default UniqueValidator remove
+        }
+
+
+class EmployeeWithProfileSerializer(serializers.ModelSerializer):
+    employee_profile = EmployeeProfileSerializer(required=False)
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'name', 'email', 'phone', 'is_active', 'date_joined', 'employee_profile']
+        read_only_fields = ['id', 'date_joined']
+    def validate(self, attrs):
+        profile_data = attrs.get('employee_profile')
+        if profile_data:
+            nid = profile_data.get('national_id')
+            user_id = self.instance.id if self.instance else None
+            if EmployeeProfile.objects.exclude(user__id=user_id).filter(national_id=nid).exists():
+                raise serializers.ValidationError({
+                    "employee_profile": {"national_id": "employee profile with this national id already exists."}
+                })
+        return attrs
+    
+
+    def validate_national_id(self, value):
+        value = value.strip()
+        user_id = self.instance.id if self.instance else None
+        if EmployeeProfile.objects.filter(national_id=value).exclude(user__id=user_id).exists():
+            raise serializers.ValidationError("National ID already in use.")
+        return value
+    
+    def create(self, validated_data):
+        profile_data = validated_data.pop('employee_profile', {})
+        validated_data['user_type'] = 'employee'
+        validated_data['is_active'] = True  # new employee active by default
+
+        user = CustomUser.objects.create_user(**validated_data)
+
+        # create profile
+        EmployeeProfile.objects.create(user=user, **profile_data)
+        return user
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('employee_profile', None)
+
+        # Update main CustomUser fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update or create EmployeeProfile without validation
+        if profile_data:
+            profile_instance, created = EmployeeProfile.objects.get_or_create(user=instance)
+            for attr, value in profile_data.items():
+                setattr(profile_instance, attr, value)
+            profile_instance.save()
+
+        return instance
+    
+
+
+class EmployeeSalarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployeeSalary
+        fields = '__all__'
+        read_only_fields = ['id', 'month', 'total_paid', 'paid_on']  # total_paid auto, paid_on auto
+
+    def create(self, validated_data):
+        from django.utils import timezone
+
+        # default month
+        if 'month' not in validated_data or validated_data['month'] is None:
+            validated_data['month'] = timezone.now().date().replace(day=1)
+
+        # check duplicate
+        if EmployeeSalary.objects.filter(employee=validated_data['employee'], month=validated_data['month']).exists():
+            raise serializers.ValidationError(
+                "Salary for this employee for the specified month already exists."
+            )
+
+        # create and return the instance
+        salary = EmployeeSalary.objects.create(**validated_data)
+        return salary
+
+
+
+
+
+
+class EmployOverView(serializers.Serializer):
+    active = serializers.SerializerMethodField(read_only=True)
+    leave = serializers.SerializerMethodField(read_only=True)
+    total_payroll = serializers.SerializerMethodField(read_only=True)
+    average_performance=serializers.SerializerMethodField(read_only=True)
+

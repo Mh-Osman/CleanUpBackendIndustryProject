@@ -1,58 +1,61 @@
-# serializers.py
-
 from rest_framework import serializers
-from users.models import CustomUser
-from .models import ClientProfile
-from locations.models import Region, Building, Apartment
+from .models import CustomUser, ClientProfile
 
 class ClientProfileSerializer(serializers.ModelSerializer):
-    region = serializers.SlugRelatedField(
-        queryset=Region.objects.all(), slug_field="name", required=False
-    )
-    building = serializers.SlugRelatedField(
-        queryset=Building.objects.all(), slug_field="name", required=False
-    )
-    apartment = serializers.SlugRelatedField(
-        queryset=Apartment.objects.all(), slug_field="number", required=False
-    )
-
+    user_name = serializers.SerializerMethodField()
     class Meta:
         model = ClientProfile
-      #  fields = ['region', 'building', 'apartment', 'avatar', 'location', 'birth_date', 'created_at', 'updated_at', 'last_login']
-        fields = '__all__'
+        fields = ['location', 'avatar','user_name']  # ClientProfile এর ফিল্ডগুলো
+    def get_user_name(self, obj):
+      print("DEBUG OBJ:", obj, type(obj))
+      if hasattr(obj, "user") and obj.user:
+         return obj.user.name
+      return None
 
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)
-    location = serializers.CharField(source='client_profile.location', allow_blank=True, required=False)
+    
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone', 'location','is_active', 'date_joined', 'client_profile']
+        fields = ['id', 'name', 'email', 'phone', 'is_active', 'date_joined', 'client_profile']
         read_only_fields = ['id', 'date_joined']
 
+    # ---------------- Create ----------------
     def create(self, validated_data):
-        validated_data['is_active'] = True  # New clients are active by default
-        location_data = validated_data.pop('location', None)
-        profile_data = validated_data.pop("client_profile", None)
-        if profile_data is None:
-            profile_data = {}
-        if location_data:
-            profile_data['location'] = location_data
-        validated_data['role'] = 'client'
+        profile_data = validated_data.pop('client_profile', {})
+        validated_data['user_type'] = 'client'
+        validated_data['is_active'] = True  # new client active by default
+
         user = CustomUser.objects.create_user(**validated_data)
 
-        # Add profile if data passed
-        if profile_data:
-            ClientProfile.objects.create(user=user, **profile_data)
-        else:
-            ClientProfile.objects.create(user=user)  # always ensure a profile exists
+        # create profile
+        ClientProfile.objects.create(user=user, **profile_data)
         return user
 
+    # ---------------- Update / Patch ----------------
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('client_profile', None)
+
+        # update main user fields
         instance = super().update(instance, validated_data)
 
+        # update or create profile
         if profile_data:
             ClientProfile.objects.update_or_create(
-                user=instance, defaults=profile_data
+                user=instance,
+                defaults=profile_data
             )
         return instance
+
+    # ---------------- Field validation ----------------
+    def validate_email(self, value):
+        user_id = self.instance.id if self.instance else None
+        if CustomUser.objects.filter(email=value).exclude(id=user_id).exists():
+            raise serializers.ValidationError("Email already in use.")
+        return value
+
+    def validate_phone(self, value):
+        user_id = self.instance.id if self.instance else None
+        if CustomUser.objects.filter(phone=value).exclude(id=user_id).exists():
+            raise serializers.ValidationError("Phone number already in use.")
+        return value

@@ -16,9 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/users/', include('users.urls')),
     path('api/v1/', include('clientProfiles.urls')),
+    path('api/v1/', include('employeeProfiles.urls')),
+    path('api/task/',include('assign_task_employee.urls')), 
+    path('api/plan/',include('plan.urls')),
+    path('api/invoice_request_from_client/',include('invoice_request_from_client.urls')),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

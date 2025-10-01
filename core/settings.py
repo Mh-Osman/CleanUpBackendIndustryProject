@@ -22,7 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
-
+STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
 # Email Settings
@@ -37,7 +38,11 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "randomid.ngrok-free.app",
-    'lisa-nondisposable-judgingly.ngrok-free.app',
+    ".ngrok-free.app",
+
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://398bac921dd6.ngrok-free.app",
 ]
 
 
@@ -82,8 +87,16 @@ INSTALLED_APPS = [
     'locations',
     'clientProfiles',
     'services_pakages',
+    'employeeProfiles',
+    'assign_task_employee',
+    'plan',
+    'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
+    
+    
     
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -122,6 +135,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / config("DATABASE_NAME"),
+        "OPTIONS": {
+            "timeout": 20,  # wait 20 seconds if DB locked
+        },
     }
 }
 
