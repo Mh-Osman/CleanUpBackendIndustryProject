@@ -4,39 +4,39 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from users.models import CustomUser
 
-<<<<<<< HEAD
-from django.forms import ValidationError
+# <<<<<<< HEAD
+# from django.forms import ValidationError
 
 
-class Region(models.Model):
-    """
-    Represents a region/city in Saudi Arabia (like Riyadh, Jeddah).
-    """
-    id = models.AutoField(primary_key=True)  # integer id
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # extra uuid
-    name = models.CharField(max_length=100)   # e.g. Riyadh
-    code = models.CharField(max_length=50, unique=True)  # Short code, e.g. 'RYD'
+# class Region(models.Model):
+#     """
+#     Represents a region/city in Saudi Arabia (like Riyadh, Jeddah).
+#     """
+#     id = models.AutoField(primary_key=True)  # integer id
+#     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # extra uuid
+#     name = models.CharField(max_length=100)   # e.g. Riyadh
+#     code = models.CharField(max_length=50, unique=True)  # Short code, e.g. 'RYD'
 
-    class Meta:
-        verbose_name = "Region"
-        verbose_name_plural = "Regions"
+#     class Meta:
+#         verbose_name = "Region"
+#         verbose_name_plural = "Regions"
 
-    def save(self, *args, **kwargs):
-        if self.id is None:
-            super().save(*args, **kwargs)  
-        self.code = 'R'+self.name+str(self.id)  
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if self.id is None:
+#             super().save(*args, **kwargs)  
+#         self.code = 'R'+self.name+str(self.id)  
+#         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.name} ({self.code} {self.id}"
+#     def __str__(self):
+#         return f"{self.name} ({self.code} {self.id}"
 
 
-=======
+# =======
 def validate_saudi_postcode(value):
     if not (1000 <= int(value) <= 9999):
         raise ValidationError(f"{value} is not a valid Saudi postcode.")
     return value
->>>>>>> gani
+# >>>>>>> gani
 class Building(models.Model):
     BUILDING_TYPES = [
         ("residential", "Residential"),
@@ -52,13 +52,7 @@ class Building(models.Model):
     created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
-<<<<<<< HEAD
-        return f"{self.name} - {self.region.name} {self.id}"
-
-=======
-        return f"{self.name} ({self.city})"
- 
->>>>>>> gani
+        return f"{self.name} ({self.type}) in {self.city}"
 
 class Apartment(models.Model):
     client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="apartments")
