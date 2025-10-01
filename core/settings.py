@@ -95,16 +95,13 @@ INSTALLED_APPS = [
     'clientProfiles',
     #services_pakages',
     'employeeProfiles',
-<<<<<<< HEAD
     'assign_task_employee',
     'plan',
     'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
-    
-    
-=======
+
     'drf_yasg',
    
->>>>>>> gani
+
     
 ]
 
