@@ -43,8 +43,6 @@ def stripe_webhook(request):
 
         if sub:
           sub.status = "active"
-
-
           if subscription_id:
             sub.stripe_subscription_id = subscription_id
             stripe_sub = stripe.Subscription.retrieve(subscription_id)

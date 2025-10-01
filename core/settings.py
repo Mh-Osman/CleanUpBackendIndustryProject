@@ -42,7 +42,7 @@ ALLOWED_HOSTS = [
 
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://398bac921dd6.ngrok-free.app",
+    "https://478e6302d0dc.ngrok-free.app",
 ]
 
 
@@ -91,7 +91,6 @@ INSTALLED_APPS = [
     'assign_task_employee',
     'plan',
     'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
-    
     
     
 ]

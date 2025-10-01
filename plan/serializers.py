@@ -3,6 +3,9 @@ from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,Invo
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuilingSerializer,ApartmentSerializer,RegionSerializer
 from datetime import datetime
+from rest_framework.views import APIView
+from django.db.models import Sum
+from rest_framework.decorators import api_view
 class PlanSerailzier(serializers.ModelSerializer):
     class Meta:
         model=PlanModel
@@ -55,6 +58,15 @@ class InvoiceLineItemSerializer(serializers.ModelSerializer):
         fields = ["description", "service", "quantity", "unit_price", "discount", "tax", "total"]
 
 
+
+class CalculationsForInvoice(serializers.Serializer):
+    total=serializers.IntegerField()
+    sales=serializers.IntegerField()
+    expense=serializers.IntegerField()
+    total_invoice=serializers.IntegerField()
+
+
+
 class InvoiceSerializer(serializers.ModelSerializer):
     line_items = InvoiceLineItemSerializer(many=True)
     total_amount = serializers.ReadOnlyField()
@@ -63,14 +75,15 @@ class InvoiceSerializer(serializers.ModelSerializer):
     building_name=serializers.SerializerMethodField(read_only=True)
     apartment_name=serializers.SerializerMethodField(read_only=True)
     region_name=serializers.SerializerMethodField(read_only=True)
+  
 
     class Meta:
         model = InvoiceModel
         fields = [
             "invoice_id", "type", "date_issued", "due_date",
-            "client",'building',"apartments", "plan", "vendor", 
+            "client",'building',"apartments", "plan", "vendor",
             "vendor_invoice_file", "note", "file",
-            "line_items", "total_amount","status","building_name","apartment_name","region_name",
+            "line_items", "total_amount","status","building_name","apartment_name","region_name"
         ]
 
     def create(self, validated_data):
@@ -103,3 +116,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
     def get_region_name(self,obj):
         if obj.building and obj.building.region:
           return obj.building.region.name
+    
+
+ 
+
+    
+        

@@ -94,7 +94,7 @@ class InvoiceModel(models.Model):
     type = models.CharField(max_length=20, choices=INVOICE_TYPE_CHOICES)
     date_issued = models.DateField()
     due_date = models.DateField(null=True, blank=True)
-    status=models.CharField(choices=invoice_status,blank=True,null=True)
+    status=models.CharField(choices=invoice_status,blank=False,null=True)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL,null=True,blank=True)
     client = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     apartments = models.ManyToManyField(Apartment)
@@ -106,6 +106,7 @@ class InvoiceModel(models.Model):
     file = models.FileField(upload_to="invoices", blank=True, null=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     expense_category=models.ManyToManyField(Category)
+
     @property
     def calculated_total(self):
         return sum(item.total for item in self.line_items.all())
