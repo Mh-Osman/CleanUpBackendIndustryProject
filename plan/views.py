@@ -8,7 +8,7 @@ from locations.models import Apartment, Building,Region
 from datetime import datetime, timedelta
 import stripe
 from django.utils import timezone
-from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer
+from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer,CalculationsForInvoice
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
@@ -225,4 +225,19 @@ class StopSubscription(APIView):
 class InvoiceView(viewsets.ModelViewSet):
     queryset=InvoiceModel.objects.all()
     serializer_class=InvoiceSerializer
-    # permission_classes=[permissions.IsAdminUser]
+    permission_classes=[permissions.IsAdminUser]
+
+from  django.db.models import Q
+
+class CalculationsForInvoiceView(APIView):
+        def get(self, request, *args, **kwargs):
+            total=InvoiceModel.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+            expense=InvoiceModel.objects.filter(Q(vendor__isnull=False),Q(client__isnull=True)).aggregate(expense=Sum('total_amount'))['expense'] or 0
+            sales=InvoiceModel.objects.filter(Q(client__isnull=False),Q(vendor__isnull=True)).aggregate(expense=Sum('total_amount'))['expense'] or 0
+            total_invoice=InvoiceModel.objects.all().count()
+            return Response({
+            "total":total,
+            "sales":sales,
+            "expense":expense,
+            "total_invoice":total_invoice
+        })

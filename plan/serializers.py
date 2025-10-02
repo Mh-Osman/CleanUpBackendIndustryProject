@@ -7,7 +7,11 @@ class PlanSerailzier(serializers.ModelSerializer):
     class Meta:
         model=PlanModel
         fields='__all__'
-
+class CalculationsForInvoice(serializers.Serializer):
+    total=serializers.IntegerField()
+    sales=serializers.IntegerField()
+    expense=serializers.IntegerField()
+    total_invoice=serializers.IntegerField()
 
 class SubscribeSerializer(serializers.ModelSerializer):
     user=ClientProfileSerializer(read_only=True)

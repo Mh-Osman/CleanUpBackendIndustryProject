@@ -46,6 +46,9 @@ urlpatterns = [
     path('api/v1/', include('services_pakages.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
+    # <<<<<<< gani
+   path('api/v1/', include('google_map.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
