@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/plan/',include('plan.urls')),
     path('api/invoice_request_from_client/',include('invoice_request_from_client.urls')),
     path('api/v1/', include('locations.urls')),
+    path('api/v1/', include('services_pakages.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

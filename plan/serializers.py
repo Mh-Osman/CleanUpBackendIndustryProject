@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem
 from clientProfiles.serializers import ClientProfileSerializer
-from locations.serializers import BuilingSerializer,ApartmentSerializer,RegionSerializer
+from locations.serializers import BuildingSerializer,ApartmentSerializer,RegionSerializer
 from datetime import datetime
 class PlanSerailzier(serializers.ModelSerializer):
     class Meta:
@@ -12,7 +12,7 @@ class PlanSerailzier(serializers.ModelSerializer):
 class SubscribeSerializer(serializers.ModelSerializer):
     user=ClientProfileSerializer(read_only=True)
     plan=PlanSerailzier(read_only=True)
-    building=BuilingSerializer(read_only=True)
+    building=BuildingSerializer(read_only=True)
     apartment=ApartmentSerializer(read_only=True)
     region=RegionSerializer(read_only=True)
     remaining_days=serializers.SerializerMethodField(read_only=True)
@@ -97,7 +97,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         name=[]
         if obj.apartments:
          for apr in obj.apartments.all():
-            name.append(apr.name)
+            name.append(apr.apartment_number)
         return name
     
     def get_region_name(self,obj):

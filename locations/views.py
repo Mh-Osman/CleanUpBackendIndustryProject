@@ -11,6 +11,13 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
+class RegionViewSet(viewsets.ModelViewSet):
+    queryset = Region.objects.all()
+    serializer_class = RegionSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['name']
+    search_fields = ['name']
 
 class BuildingViewSet(viewsets.ModelViewSet):
     queryset = Building.objects.prefetch_related('apartments').all()

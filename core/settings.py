@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     'users',
     'locations',
     'clientProfiles',
-    #services_pakages',
+    'services_pakages',
     'employeeProfiles',
     'assign_task_employee',
     'plan',

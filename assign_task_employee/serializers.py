@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import TaskAssignToEmployee
 from locations.models import Building, Apartment
-from locations.serializers import BuilingSerializer
+from locations.serializers import BuildingSerializer
 from services_pakages.models import Category
 from django.contrib.auth import get_user_model
 from services_pakages.serializers import CategorySerializer
@@ -13,7 +13,7 @@ User = get_user_model()
 
 class TaskAssignToEmployeeSerializer(serializers.ModelSerializer):
     # category=CategorySerializer(many=True)
-    # building=BuilingSerializer(read_only=True)
+    # building=BuildingSerializer(read_only=True)
     active=serializers.SerializerMethodField(read_only=True)
     total_revenue=serializers.SerializerMethodField(read_only=True)
     class Meta:
@@ -57,7 +57,7 @@ class FeatureSerialzer(serializers.ModelSerializer):
 
 class ServiceDetailsSerializer(serializers.ModelSerializer):
     category=CategorySerializer(read_only=True,many=True)
-    building=BuilingSerializer(read_only=True)
+    building=BuildingSerializer(read_only=True)
     package=FeatureSerialzer(read_only=True,many=True)
     active=serializers.SerializerMethodField(read_only=True)
     completed=serializers.SerializerMethodField(read_only=True)

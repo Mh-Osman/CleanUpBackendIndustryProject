@@ -1,8 +1,13 @@
 from rest_framework import serializers
-from .models import  Building, Apartment
+from .models import  Building, Apartment, Region
 from users.models import CustomUser
 from django.db import transaction
 
+class RegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = ['id', 'name']
+        read_only_fields = ['id']
 
 class ApartmentSerializerForBuilding(serializers.ModelSerializer):
     class Meta:

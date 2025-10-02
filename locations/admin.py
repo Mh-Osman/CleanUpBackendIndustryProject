@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Building, Apartment
+from .models import Building, Apartment, Region
 
 # class ApartmentAdmin(admin.ModelAdmin):
 #     list_display = 
@@ -10,3 +10,4 @@ from .models import Building, Apartment
 
 admin.site.register(Building)
 admin.site.register(Apartment)
+admin.site.register(Region)

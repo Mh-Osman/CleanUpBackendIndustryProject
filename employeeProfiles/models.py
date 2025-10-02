@@ -13,12 +13,9 @@ class EmployeeProfile(models.Model):
     id_expiry = models.DateField(null=True, blank=True) #saudi arabia specific 
     contact_number = models.CharField(max_length=15, null=True, blank=True)
     shift = models.CharField(max_length=50, choices=[("morning","Morning"),("evening","Evening")])
-<<<<<<< HEAD
+
     status = models.CharField(max_length=20, choices=[('Active','Active'), ('On Leave','On Leave')], default='Active',blank=True,null=True)
-=======
-    #it will be cancled 
-    status = models.CharField(max_length=20, choices=[('Active','Active'), ('On Leave','On Leave')], default='Active')
->>>>>>> gani
+
     contract_start = models.DateField(auto_now_add=True)
     contract_end = models.DateField(null=True, blank=True) #mannualy set
     location = models.CharField(max_length=255, null=True, blank=True)     # City / Branch
