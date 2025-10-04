@@ -34,22 +34,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "randomid.ngrok-free.app",
-    ".ngrok-free.app",
 
-]
-CSRF_TRUSTED_ORIGINS = [
-    "https://398bac921dd6.ngrok-free.app",
-]
-
-
-CSRF_TRUSTED_ORIGINS = [
-   
-    "https://*.ngrok-free.app"
-]
 
 # DRF JWT Authentication
 REST_FRAMEWORK = {
@@ -103,12 +88,14 @@ INSTALLED_APPS = [
 
     # <<<<<<< gani
     'google_map',
+
+    'corsheaders',
    
 
     
 ]
 
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -118,6 +105,30 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "randomid.ngrok-free.app",
+    ".ngrok-free.app",
+    "127.0.0.1:6868",
+    "127.0.0.1:4041",
+    "10.10.13.61"
+
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://398bac921dd6.ngrok-free.app",
+   
+]
+
+
+CSRF_TRUSTED_ORIGINS = [
+   
+    "https://*.ngrok-free.app",
+    "http://127.0.0.1:6868"
 ]
 
 ROOT_URLCONF = 'core.urls'
