@@ -49,6 +49,8 @@ urlpatterns = [
 
     # <<<<<<< gani
    path('api/v1/', include('google_map.urls')),
+   #salah uddin
+   path('api/v1/all_history/',include('all_history.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,

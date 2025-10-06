@@ -5,7 +5,7 @@ from services_pakages.models import Category
 from employeeProfiles.models import EmployeeProfile
 from plan.models import PlanModel
 from rest_framework.response import Response
-
+from auditlog.registry import auditlog
 User=get_user_model()
 
 # Create your models here.
@@ -34,6 +34,10 @@ class FeatureModel(models.Model):
 
     def __str__(self):
         return f"id: {self.id} name: {self.name}  price : {self.price}"
+
+
+auditlog.register(FeatureModel)
+
 # assigned task to the employee
 class TaskAssignToEmployee(models.Model):
     name=models.CharField(max_length=100)
@@ -68,6 +72,6 @@ class TaskAssignToEmployee(models.Model):
         raise models.ValidationError("Choose a valid category")
      return value
 
-
+auditlog.register(TaskAssignToEmployee)
 
 

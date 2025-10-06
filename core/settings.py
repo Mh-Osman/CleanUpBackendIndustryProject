@@ -83,15 +83,12 @@ INSTALLED_APPS = [
     'assign_task_employee',
     'plan',
     'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
-
     'drf_yasg',
-
     # <<<<<<< gani
     'google_map',
-
     'corsheaders',
-   
-
+    "auditlog",
+    'all_history',
     
 ]
 
@@ -107,6 +104,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
 ]
 
 ALLOWED_HOSTS = [

@@ -1,6 +1,7 @@
 from django.db import models
 from services_pakages.models import Category
 from django.contrib.auth import get_user_model
+from auditlog.registry import auditlog
 User=get_user_model()
 # Create your models here.
 
@@ -20,4 +21,4 @@ class InvoiceRequestFromEmployee(models.Model):
     amount=models.IntegerField()
     status=models.CharField(choices=CHOICE_STATUS,default='Submitted')
 
-
+auditlog.register(InvoiceRequestFromEmployee)

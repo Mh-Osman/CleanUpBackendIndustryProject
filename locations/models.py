@@ -3,7 +3,7 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from users.models import CustomUser
-
+from auditlog.registry import auditlog
 # <<<<<<< HEAD
 # from django.forms import ValidationError
 
@@ -23,7 +23,7 @@ class Region(models.Model):
     def __str__(self):
         return f"{self.name} ({self.id})"
 
-
+auditlog.register(Region)
 # =======
 def validate_saudi_postcode(value):
     if not (1000 <= int(value) <= 9999):
@@ -47,6 +47,8 @@ class Building(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.type}) in {self.city}"
+
+auditlog.register(Building)
 
 class Apartment(models.Model):
     client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="apartments")
@@ -75,3 +77,4 @@ class Apartment(models.Model):
         country = self.country
         return f"{recipient_name}\n{street_building}\n{city}\n{postcode_line}\n{country}"
 
+auditlog.register(Apartment)

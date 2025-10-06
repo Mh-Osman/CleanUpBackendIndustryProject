@@ -4,13 +4,15 @@ from django.db import models
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
-
+from auditlog.registry import auditlog
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     def __str__(self):
         return self.name
+
+auditlog.register(Category)
 
 class Service(models.Model):
     BILLING_CHOICES = [
@@ -28,6 +30,11 @@ class Service(models.Model):
     def __str__(self):
         return self.name
 
+auditlog.register(Service)
+
+
+#no need
+
 class Package(models.Model):
     name = models.CharField(max_length=255)
     services = models.ManyToManyField(Service, related_name="included_in_packages")
@@ -41,6 +48,7 @@ class Feature(models.Model):
     def __str__(self):
         return f"{self.title} ({self.service.name})"
 
+auditlog.register(Feature)
 
 class ServiceAssignment(models.Model):
     client = models.ForeignKey(
@@ -65,3 +73,7 @@ class ServiceAssignment(models.Model):
 
     def __str__(self):
         return f"{self.client.username} → {self.service or self.package} at {self.apartment.code}"
+
+
+
+auditlog.register(ServiceAssignment)

@@ -8,6 +8,9 @@ from .models import Building, Apartment, Region
 # class BuildingAdmin(admin.ModelAdmin):
 #     list_display = ("id",)
 
-admin.site.register(Building)
+# admin.site.register(Building)
+@admin.register(Building)
+class BuldingAdmin(admin.ModelAdmin):
+    list_display=['id','name','region','city']
 admin.site.register(Apartment)
 admin.site.register(Region)

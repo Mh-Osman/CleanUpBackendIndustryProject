@@ -5,6 +5,7 @@ from services_pakages.models import Category
 from datetime import datetime,timezone
 from clientProfiles.models import ClientProfile
 from django.contrib.auth import get_user_model
+from auditlog.registry import auditlog
 
 User=get_user_model()
 # Create your models here.
@@ -31,6 +32,8 @@ class PlanModel(models.Model):
     # def amount_after_discount(self):
     #     return self.amount-self.discount
 
+
+auditlog.register(PlanModel)
 
 class Subscription(models.Model):
     STATUS_CHOICES = (
@@ -61,6 +64,7 @@ class Subscription(models.Model):
     def __str__(self):
         return f"{self.user} - {self.plan} ({self.status}) id is {self.id}"
 
+auditlog.register(Subscription)
 
 
 
