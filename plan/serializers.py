@@ -2,7 +2,9 @@ from rest_framework import serializers
 from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuildingSerializer,ApartmentSerializer,RegionSerializer
+from locations.models import Building,Apartment,Region
 from datetime import datetime
+from rest_framework.response import Response
 class PlanSerailzier(serializers.ModelSerializer):
     class Meta:
         model=PlanModel
@@ -13,7 +15,74 @@ class CalculationsForInvoice(serializers.Serializer):
     expense=serializers.IntegerField()
     total_invoice=serializers.IntegerField()
 
-class SubscribeSerializer(serializers.ModelSerializer):
+
+
+
+from rest_framework import serializers
+from .models import Subscription, PlanModel, Building, Apartment, Region
+
+class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = [
+            "user",
+            "plan",
+            "building",
+            "apartment",
+            "region",
+            "status",
+            "start_date",
+            "end_date",
+            "current_period_end",
+            "pause_until",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def validate(self, attrs):
+      user = attrs.get('user')
+      plan = attrs.get('plan')
+      building = attrs.get('building')
+      apartment = attrs.get('apartment')
+      region = attrs.get('region')
+      start_date = attrs.get('start_date')
+      current_period_end = attrs.get('current_period_end')
+      status = attrs.get("status")
+
+    # Only enforce required fields during creation
+      if self.instance is None:
+        required_fields = [user, plan, building, apartment, region, start_date, current_period_end, status]
+        if not all(required_fields):
+            raise serializers.ValidationError(
+                "All fields (user, plan, building, apartment, region, start_date, current_period_end, status) are required."
+            )
+
+        # Prevent duplicate active/pending subscriptions
+        subscription = Subscription.objects.filter(
+            user=user,
+            plan=plan,
+            building=building,
+            region=region,
+            apartment=apartment,
+            status__in=['active', 'paused', 'past_due']
+        ).first()
+
+        if subscription:
+            if subscription.status == 'active':
+                raise serializers.ValidationError("You already have this plan active on this apartment.")
+            elif subscription.status == 'paused':
+                raise serializers.ValidationError("This plan is paused — use resume to activate it.")
+            elif subscription.status == 'past_due':
+                raise serializers.ValidationError("Your subscription is past due — update it first.")
+    
+      # For PATCH, no strict required field check
+      return attrs
+
+
+         
+
+    
+
+class SubscribeSerializerDetails(serializers.ModelSerializer):
     user=ClientProfileSerializer(read_only=True)
     plan=PlanSerailzier(read_only=True)
     building=BuildingSerializer(read_only=True)

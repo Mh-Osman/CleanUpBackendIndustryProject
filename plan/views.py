@@ -8,13 +8,13 @@ from locations.models import Apartment, Building,Region
 from datetime import datetime, timedelta
 import stripe
 from django.utils import timezone
-from .serializers import PlanSerailzier,SubscribeSerializer,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer,CalculationsForInvoice
+from .serializers import PlanSerailzier,SubscribeSerializerDetails,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer,CalculationsForInvoice,SubscriptionCreateSerializer
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from django.db.models import Sum
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+# stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class PlanView(viewsets.ModelViewSet):
@@ -27,14 +27,30 @@ class PlanView(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
     
+class SubscriptionListCreateView(generics.ListCreateAPIView):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionCreateSerializer
+    permission_classes = [permissions.AllowAny] # need to change and set IsAdminUser
+
+    def perform_create(self, serializer):
+        sub=serializer.save()
+        SubscriptionHistory.objects.create(
+              subscription=sub,
+              amount=sub.plan.amount,
+              action="active",
+              start_date=sub.start_date,
+              end_date=sub.current_period_end
+              )
+
 
 
 class SubscriptionSerializerView(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
     queryset=Subscription.objects.all()
-    serializer_class=SubscribeSerializer
+    serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment']      
+    filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment']
+         
 
 
 class SubcriptionFullStatusDetailView(APIView):
@@ -59,73 +75,73 @@ class SubcriptionFullStatusDetailView(APIView):
               
         
 
-class CreateCheckoutSession(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+# class CreateCheckoutSession(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        plan_id = request.data.get("plan_id")
-        building_id = request.data.get("building_id")
-        apartment_id = request.data.get("apartment_id")
-        region_id=request.data.get('region_id')
-        user = request.user
-
-        
-        try: plan = PlanModel.objects.get(id=plan_id)
-        except PlanModel.DoesNotExist: return Response({"error":"plan not found"}, status=404)
-        try: building = Building.objects.get(id=building_id)
-        except Building.DoesNotExist: return Response({"error":"Building not found"}, status=404)
-        try: apartment = Apartment.objects.get(id=apartment_id)
-        except Apartment.DoesNotExist: return Response({"error":"Apartment not found"}, status=404)
-        try:region=Region.objects.get(id=region_id)
-        except Region.DoesNotExist: return Response({"error":"Region not found"},status=404)
+#     def post(self, request):
+#         plan_id = request.data.get("plan_id")
+#         building_id = request.data.get("building_id")
+#         apartment_id = request.data.get("apartment_id")
+#         region_id=request.data.get('region_id')
+#         user = request.user
 
         
-        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status__in=['active','paused','past_due']).first()
-        if subscription :
-            if subscription.status=='active':
-                return Response("You already have this paln on this apartment ! kindly contact with Us !")
-            if subscription.status=='paused':
-                return Response("You Have this plan but it's temporary paused ,contract with admin ")
-            if subscription.status=='past_due':
-                return Response("Recharge your account and contact with admin")
+#         try: plan = PlanModel.objects.get(id=plan_id)
+#         except PlanModel.DoesNotExist: return Response({"error":"plan not found"}, status=404)
+#         try: building = Building.objects.get(id=building_id)
+#         except Building.DoesNotExist: return Response({"error":"Building not found"}, status=404)
+#         try: apartment = Apartment.objects.get(id=apartment_id)
+#         except Apartment.DoesNotExist: return Response({"error":"Apartment not found"}, status=404)
+#         try:region=Region.objects.get(id=region_id)
+#         except Region.DoesNotExist: return Response({"error":"Region not found"},status=404)
+
+        
+#         subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status__in=['active','paused','past_due']).first()
+#         if subscription :
+#             if subscription.status=='active':
+#                 return Response("You already have this paln on this apartment ! kindly contact with Us !")
+#             if subscription.status=='paused':
+#                 return Response("You Have this plan but it's temporary paused ,contract with admin ")
+#             if subscription.status=='past_due':
+#                 return Response("Recharge your account and contact with admin")
             
-        subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status='inactive').first()
+#         subscription = Subscription.objects.filter(user=user, plan=plan, building=building,region=region,apartment=apartment,status='inactive').first()
     
-        if subscription and subscription.stripe_customer_id:
-            customer_id = subscription.stripe_customer_id
-        else:
-            customer = stripe.Customer.create(email=user.email)
-            customer_id = customer.id
+#         if subscription and subscription.stripe_customer_id:
+#             customer_id = subscription.stripe_customer_id
+#         else:
+#             customer = stripe.Customer.create(email=user.email)
+#             customer_id = customer.id
         
  
-        session = stripe.checkout.Session.create(
-            customer=customer_id,
-            payment_method_types=["card"],
-            line_items=[
-                {"price": plan.stripe_price_id, 
-                 "quantity": 1}
-                ],
-            mode="subscription",
-            success_url="http://localhost:3000/success",
-            cancel_url="http://localhost:3000/cancel"
-        )
+#         session = stripe.checkout.Session.create(
+#             customer=customer_id,
+#             payment_method_types=["card"],
+#             line_items=[
+#                 {"price": plan.stripe_price_id, 
+#                  "quantity": 1}
+#                 ],
+#             mode="subscription",
+#             success_url="http://localhost:3000/success",
+#             cancel_url="http://localhost:3000/cancel"
+#         )
 
 
-        if not subscription:
-            subscription = Subscription.objects.create(
-                user=user,
-                plan=plan,
-                stripe_customer_id=customer_id,
-                status="inactive",
-                building=building,
-                apartment=apartment,
-                region=region
-            )
-        else:
-            subscription.stripe_customer_id = customer_id
-            subscription.save()
+#         if not subscription:
+#             subscription = Subscription.objects.create(
+#                 user=user,
+#                 plan=plan,
+#                 stripe_customer_id=customer_id,
+#                 status="inactive",
+#                 building=building,
+#                 apartment=apartment,
+#                 region=region
+#             )
+#         else:
+#             subscription.stripe_customer_id = customer_id
+#             subscription.save()
 
-        return Response({"checkout_url": session.url})
+#         return Response({"checkout_url": session.url})
 
 
 class PauseSubscription(APIView):
@@ -137,27 +153,35 @@ class PauseSubscription(APIView):
         except Subscription.DoesNotExist:
             return Response({"error":"Subscription not found"}, status=404)
 
-        if not sub.stripe_subscription_id:
-            return Response({"error":"No Stripe subscription ID"}, status=400)
+        # if not sub.stripe_subscription_id:
+        #     return Response({"error":"No Stripe subscription ID"}, status=400)
+
         if sub.status!="active":
-            return Response({"error":"first active you sub'scription"})
+            return Response({"error":"first active your sub'scription then try to pause"})
     
-        try:
-          stripe.Subscription.modify(
-            sub.stripe_subscription_id,
-            pause_collection={
-                "behavior": "keep_as_draft",
-                "resumes_at": int((datetime.now() + timedelta(days=30)).timestamp())  # example 30 days
-            }
-         )
-        except stripe.error.InvalidRequestError as e:
-          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+        # try:
+        #   stripe.Subscription.modify(
+        #     sub.stripe_subscription_id,
+        #     pause_collection={
+        #         "behavior": "keep_as_draft",
+        #         "resumes_at": int((datetime.now() + timedelta(days=30)).timestamp())  # example 30 days
+        #     }
+        #  )
+        # except stripe.error.InvalidRequestError as e:
+        #   return Response({"error": f"Stripe error: {str(e)}"}, status=400)
        
         sub.status = "paused"
         sub.pause_until = datetime.now() + timedelta(days=30)
         sub.save()
+        SubscriptionHistory.objects.create(
+              subscription=sub,
+              amount=sub.plan.amount,
+              action="paused",
+              start_date=sub.start_date,
+              end_date=sub.current_period_end
+              )
 
-        return Response({"message":"Subscription paused successfully. DB updated."})
+        return Response({"message":"Subscription paused successfully !"})
 
 
 
@@ -171,20 +195,22 @@ class ResumeSubscription(APIView):
             print(sub)
         except Subscription.DoesNotExist:
             return Response({"error":"Subscription not found"}, status=404)
-        if not sub.stripe_subscription_id:
-            return Response({"error":"No Stripe subscription ID"}, status=400)
+        
+        # if not sub.stripe_subscription_id:
+        #     return Response({"error":"No Stripe subscription ID"}, status=400)
+
         if sub.status!="paused":
             return Response({"error":"first paused your sub'scription"})
-        try:
-            stripe_sub=stripe.Subscription.modify(
-            sub.stripe_subscription_id,
-            pause_collection=None
-        )
-            print(stripe_sub)
-        except stripe.error.InvalidRequestError as e:
-          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
-        print(stripe_sub.get('status'))
-        sub.status = stripe_sub.get("status", "active")  
+        # try:
+        #     stripe_sub=stripe.Subscription.modify(
+        #     sub.stripe_subscription_id,
+        #     pause_collection=None
+        # )
+        #     print(stripe_sub)
+        # except stripe.error.InvalidRequestError as e:
+        #   return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+    
+        sub.status = "active"  
         sub.pause_until = None 
         sub.save()
         SubscriptionHistory.objects.create(
@@ -195,7 +221,7 @@ class ResumeSubscription(APIView):
               end_date=sub.current_period_end
               )
        
-        return Response({"message":"Resume requested. DB will auto-update via webhook."})
+        return Response({"message":"Resumed Successfully !"})
 
 
 class StopSubscription(APIView):
@@ -206,14 +232,17 @@ class StopSubscription(APIView):
             sub = Subscription.objects.get(id=subscription_id)
         except Subscription.DoesNotExist:
             return Response({"error":"Subscription not found"}, status=404)
-        if not sub.stripe_subscription_id:
-            return Response({"error":"No Stripe subscription ID"}, status=400)
-        try:
-          stripe.Subscription.delete(sub.stripe_subscription_id)
-        except stripe.error.InvalidRequestError as e:
-          return Response({"error": f"Stripe error: {str(e)}"}, status=400)
+        
+        # if not sub.stripe_subscription_id:
+        #     return Response({"error":"No Stripe subscription ID"}, status=400)
+        # try:
+        #   stripe.Subscription.delete(sub.stripe_subscription_id)
+        # except stripe.error.InvalidRequestError as e:
+        #   return Response({"error": f"Stripe error: {str(e)}"}, status=400)
 
-        return Response({"message":"Stop requested. DB will auto-update via webhook."})
+        sub.status="canceled"
+        sub.save()
+        return Response({"message":"Subscription Stoped Successfully !"})
 
 
 

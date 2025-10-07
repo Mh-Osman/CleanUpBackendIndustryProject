@@ -13,7 +13,7 @@ User=get_user_model()
 class PlanModel(models.Model):
     name = models.CharField(max_length=100)  
     plan_code = models.CharField(max_length=50, unique=True)  
-    stripe_price_id = models.CharField(max_length=100) 
+    # stripe_price_id = models.CharField(max_length=100) 
     amount = models.IntegerField()  
     interval = models.CharField(
         max_length=20,
@@ -49,9 +49,11 @@ class Subscription(models.Model):
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
     apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True)
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
-    stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
-    stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="inactive")
+
+    # stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
+    # stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     current_period_end = models.DateTimeField(null=True, blank=True)
