@@ -120,12 +120,12 @@ class InvoiceModel(models.Model):
 
 class InvoiceLineItem(models.Model):
     invoice = models.ForeignKey(InvoiceModel, on_delete=models.CASCADE, related_name="line_items")
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255,null=True,blank=True)
     service = models.ForeignKey('assign_task_employee.FeatureModel', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0,blank=True,null=True)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0,null=True,blank=True)
 
     @property
     def total(self):

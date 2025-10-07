@@ -7,7 +7,7 @@ from rest_framework import permissions
 
 
 class HistoryView(ListAPIView):
-    queryset=LogEntry.objects.all()
+    queryset=LogEntry.objects.all().order_by('-timestamp')
     serializer_class=HistoryTrackSerializer
     permission_classs=[permissions.IsAdminUser]
-    
+
