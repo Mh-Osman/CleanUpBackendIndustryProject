@@ -21,10 +21,10 @@ class ClientProfile(models.Model):
     
   
     def __str__(self):
-        return f"Client: {self.user.name}"
+        return f"Client: {self.user.email}"
     
 class ClientPhone(models.Model):
-    client = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="phones" , limit_choices_to={'user_type': 'client'})
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="phones" , limit_choices_to={'user_type': 'client'})
     phone_number = models.CharField(max_length=15)
 
     def __str__(self):

@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     "auditlog",
     'all_history',
     'debug_toolbar', #osman
+    'django_filters', #osman
     
 ]
 

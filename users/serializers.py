@@ -6,16 +6,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id','name','email','phone','user_type','password','is_active']
+        fields = ['id','name','email','prime_phone','user_type','password','is_active']
         read_only_fields = ['id','is_active']
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
             name = validated_data['name'],
-            email=validated_data['email'],
-            phone=validated_data['phone'],
-            password=validated_data['password'],
-            user_type=validated_data.get('user_type', 'client')
+            email = validated_data['email'],
+            prime_phone = validated_data['prime_phone'],
+            password = validated_data['password'],
+            user_type = validated_data.get('user_type', 'client')
         )
         return user
 
