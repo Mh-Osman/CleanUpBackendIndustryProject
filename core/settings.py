@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'corsheaders',
     "auditlog",
     'all_history',
+    'debug_toolbar', #osman
     
 ]
 
@@ -105,8 +106,15 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     "auditlog.middleware.AuditlogMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
 ]
 
+INTERNAL_IPS = [ #osman
+
+    "127.0.0.1",
+    "10.10.13.61",
+
+]
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
