@@ -1,7 +1,9 @@
-from plan.models import Subscription
+
 from rest_framework import serializers
 from .models import ClientPhone, CustomUser, ClientProfile , ClientPhone
-from subscriptions.models import Subscription
+from subscriptions.models import Subscription 
+from plan.models import PlanModel
+
 
 
 class ClientProfileSerializer(serializers.ModelSerializer):
@@ -153,6 +155,6 @@ class AdminDashboardClientDisplaySerializer(serializers.Serializer):
     #     return None  # for now hardcoded
     
     def get_each_client_amount(self, obj):
-        amounts = Subscription.objects.select_related
+        amounts = Subscription.objects.select_related('planmodel')
         
     

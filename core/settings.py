@@ -91,7 +91,11 @@ INSTALLED_APPS = [
     "auditlog",
     'all_history',
     'debug_toolbar', #osman
-   
+    'subscriptions', #osman
+ 
+    
+     
+
     
 ]
 
