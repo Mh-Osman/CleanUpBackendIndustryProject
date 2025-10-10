@@ -17,12 +17,18 @@ class ClientProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # create time auto set
     updated_at = models.DateTimeField(auto_now=True) 
 
-    last_login = models.DateTimeField(null=True, blank=True)  # update when user logs in with signal
 
     
   
     def __str__(self):
-        return f"Client: {self.user.name}"
+        return f"Client: {self.user.email}"
+    
+class ClientPhone(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="phones" , limit_choices_to={'user_type': 'client'})
+    phone_number = models.CharField(max_length=15)
+
+    def __str__(self):
+        return self.phone_number
 
 # #represent mant to many relation between client and apartment with unique code
 # class ClientApartment(models.Model):

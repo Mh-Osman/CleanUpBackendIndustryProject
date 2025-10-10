@@ -19,6 +19,7 @@ class SpecialService(models.Model):
     apartment = models.ForeignKey('locations.Apartment', on_delete=models.CASCADE, related_name='special_services', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+ 
 
 
 class PlanModel(models.Model): 
@@ -40,6 +41,7 @@ class PlanModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     auto_renewal=models.BooleanField(default=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f'{self.plan_code} - {self.name}'
     # @property
