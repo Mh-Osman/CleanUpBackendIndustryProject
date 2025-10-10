@@ -9,20 +9,34 @@ from auditlog.registry import auditlog
 
 User=get_user_model()
 # Create your models here.
+#salah uddin added a special services option
 
-class PlanModel(models.Model):
+class SpecialService(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    building = models.ForeignKey('locations.Building', on_delete=models.CASCADE, related_name='special_services')
+    apartment = models.ForeignKey('locations.Apartment', on_delete=models.CASCADE, related_name='special_services', null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PlanModel(models.Model): 
     name = models.CharField(max_length=100)  
     plan_code = models.CharField(max_length=50, unique=True)  
     # stripe_price_id = models.CharField(max_length=100) 
-    amount = models.IntegerField()  
+    amount = models.FloatField()  
     interval = models.CharField(
         max_length=20,
-        choices=(("month", "Monthly"), ("year", "Yearly")),
+        choices=(("month", "Monthly"), ("year", "Yearly"),("day", "Daily")),
         default="month"
     )
     description = models.TextField(blank=True, null=True)  
-    is_active = models.BooleanField(default=True)  
-    discount=models.IntegerField(blank=True,null=True,default=0)
+    is_active = models.BooleanField(default=True)
+    category=models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
+    #extra added
+    # service=models.ManyToManyField('assign_task_employee.FeatureModel',blank=True) 
+    discount=models.FloatField(blank=True,null=True,default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     auto_renewal=models.BooleanField(default=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -32,8 +46,20 @@ class PlanModel(models.Model):
     # def amount_after_discount(self):
     #     return self.amount-self.discount
 
+class ServiceLineItem(models.Model):
+    plan=models.ForeignKey(PlanModel,on_delete=models.CASCADE, related_name="service_line_items")
+    name=models.CharField(max_length=100,blank=True,null=True)
+    description = models.CharField(max_length=255,null=True,blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0,blank=True,null=True)
+
+    def __str__(self):
+        return f'{self.name}  {self.id}  {self.description}'
+
 
 auditlog.register(PlanModel)
+auditlog.register(ServiceLineItem)
 
 class Subscription(models.Model):
     STATUS_CHOICES = (
@@ -43,23 +69,28 @@ class Subscription(models.Model):
         ("canceled","Canceled"),
         ("past_due","past_due"),
     )
+    #salah uddin
+    PAYMENT=(
+        ('prepaid','prepaid'),
+        ('postpaid','postpaid'),
+    )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
     plan = models.ForeignKey("PlanModel", on_delete=models.SET_NULL, null=True)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
     apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True)
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
-
+    payment=models.CharField(choices=PAYMENT,blank=True,null=True,max_length=10,default='prepaid') #salah uddin
     # stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
     # stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
-
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
-    start_date = models.DateTimeField(null=True, blank=True)
-    end_date = models.DateTimeField(null=True, blank=True)
-    current_period_end = models.DateTimeField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+   
+    current_period_end = models.DateField(null=True, blank=True)
     pause_until = models.DateTimeField(null=True, blank=True)  # for paused subscriptions
     created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+    employee=models.ManyToManyField(User,related_name='subscription_employee')
 
 
 

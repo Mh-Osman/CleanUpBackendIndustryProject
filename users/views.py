@@ -68,6 +68,7 @@ class LoginAPIView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(request, email=email, password=password)
+        print(user)
         if user:
             if not user.is_active:
                 return Response({"error":"Account not verified"}, status=status.HTTP_403_FORBIDDEN)
@@ -77,7 +78,7 @@ class LoginAPIView(APIView):
                 "access": str(refresh.access_token),
                 "user": UserSerializer(user).data
             }, status=status.HTTP_200_OK)
-        return Response({"error":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"error":"Invalid User"})
 
 # ✅ Forget Password
 class ForgetPasswordAPIView(APIView):

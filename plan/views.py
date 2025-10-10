@@ -20,13 +20,14 @@ from django.db.models import Sum
 class PlanView(viewsets.ModelViewSet):
     queryset=PlanModel.objects.all()
     serializer_class=PlanSerailzier
-    
-
+    # permission_classes=[permissions.AllowAny]
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
     
+  
+          
 class SubscriptionListCreateView(generics.ListCreateAPIView):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionCreateSerializer
@@ -44,13 +45,28 @@ class SubscriptionListCreateView(generics.ListCreateAPIView):
 
 
 
+class CustomPermissionForSubscriptionEmployeeAndAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return [permissions.IsAuthenticated]
+        
+    def has_object_permission(self, request, view, obj):
+        return [permissions.IsAdminUser]
+
+
 class SubscriptionSerializerView(generics.ListAPIView):
-    permission_classes = [permissions.IsAdminUser]
-    queryset=Subscription.objects.all()
+    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CustomPermissionForSubscriptionEmployeeAndAdmin]
+    # permission_classes = [permissions.AllowAny]
+    queryset=Subscription.objects.all().order_by("-created_at")
     serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment']
-         
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            return self.queryset.filter(
+                Q(user=self.request.user) | Q(employee=self.request.user)
+            )
+        return self.queryset
 
 
 class SubcriptionFullStatusDetailView(APIView):
@@ -69,7 +85,7 @@ class SubcriptionFullStatusDetailView(APIView):
         }
         serializer=SubscriptionStatusCountSerializer(data)
         return Response(serializer.data)
-        
+    
     
      
               

@@ -1,14 +1,55 @@
 from rest_framework import serializers
-from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem
+from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem,ServiceLineItem
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuildingSerializer,ApartmentSerializer,RegionSerializer
 from locations.models import Building,Apartment,Region
 from datetime import datetime
 from rest_framework.response import Response
+
+
+
+#salah uddin
+class ServiceLineItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceLineItem
+        fields = ["name","description","quantity","unit_price"]
+
 class PlanSerailzier(serializers.ModelSerializer):
+    #salah uddin
+    service_line_items=ServiceLineItemSerializer(many=True)
+    # total=serializers.ReadOnlyField()
     class Meta:
         model=PlanModel
-        fields='__all__'
+        fields=["name","plan_code","interval","amount","description","is_active","category","discount","auto_renewal","service_line_items"]
+        read_only_fields=["created_at","updated_at"]
+    def validate(self, attrs):
+      amount = attrs.get('amount')
+      discount = attrs.get('discount')
+      if amount is not None and amount < 0:
+        raise serializers.ValidationError({"amount": "Amount must be positive"})
+      if discount is not None and discount < 0:
+        raise serializers.ValidationError({"discount": "Discount must be positive"})
+      return attrs
+
+    #salah uddin
+    def create(self, validated_data):
+        amount = validated_data.get('amount', 0)
+        discount = validated_data.get('discount', 0)
+        if amount>0 and discount>0:
+            validated_data['amount'] = amount - (amount * discount / 100.00)
+    
+        service_line_items=validated_data.pop('service_line_items',[])
+        plan = PlanModel.objects.create(**validated_data)
+        if service_line_items:
+            for pkg in service_line_items:
+                ServiceLineItem.objects.create(plan=plan,**pkg)
+
+  
+        return plan
+            
+
+ 
+
 class CalculationsForInvoice(serializers.Serializer):
     total=serializers.IntegerField()
     sales=serializers.IntegerField()
@@ -32,9 +73,12 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             "region",
             "status",
             "start_date",
-            "end_date",
+            
             "current_period_end",
             "pause_until",
+            "payment", #salah uddin 
+            "employee" #salah uddin 
+            # "service",
         ]
         read_only_fields = ["created_at", "updated_at"]
 
@@ -92,11 +136,11 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
     
     class Meta:
         model=Subscription
-        fields=['user','plan','building','apartment','status','region','remaining_days']
+        fields=['user','plan','building','apartment','status','region','remaining_days','payment','employee']
     
     def get_remaining_days(self, obj):
         if obj.current_period_end:
-            delta = obj.current_period_end.date() - datetime.now().date()
+            delta = obj.current_period_end- datetime.now().date()
             return max(delta.days, 0)
         return 0
 

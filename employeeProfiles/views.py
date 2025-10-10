@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from invoice_request_from_client.models import InvoiceRequestFromEmployee
 from django.db.models import Sum,Q
-from assign_task_employee.models import TaskAssignToEmployee
+from assign_task_employee.models import SpecialServicesModel
 # from .models import EmployeeProfile, InvoiceRequestFromEmployee
 
 
@@ -64,15 +64,11 @@ class EmpployeeSalaryViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
     
 
-
-
-
-
 class EmployeeOverviewViewset(APIView):
     permission_classes=[IsAdminUser]
     def get(self, request):
 
-        tasks = TaskAssignToEmployee.objects.all()
+        tasks = SpecialServicesModel.objects.all()
         total_tasks = tasks.count() or 1  # avoid division by zero
         completed = tasks.filter(status='completed').count()
         started = tasks.filter(status='started').count()
@@ -84,6 +80,7 @@ class EmployeeOverviewViewset(APIView):
             (completed * 100 + started * 50 + assigned * 20 + canceled * 0) / total_tasks
         )
         overview = {
+            "total_employee": EmployeeProfile.objects.all().count(),
             "active": EmployeeProfile.objects.filter(
                 status='Active',
                 user__user_type='employee'

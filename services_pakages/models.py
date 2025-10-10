@@ -10,7 +10,7 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     def __str__(self):
-        return self.name
+        return f'{self.name} {self.id}'
 
 auditlog.register(Category)
 
@@ -28,7 +28,7 @@ class Service(models.Model):
     billing_cycle = models.CharField(max_length=10, choices=BILLING_CHOICES, default="monthly")
     
     def __str__(self):
-        return self.name
+        return f'{self.name} {self.id}'
 
 auditlog.register(Service)
 

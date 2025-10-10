@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from locations.models import Building,Apartment
+from locations.models import Building,Apartment,Region
 from services_pakages.models import Category
 from employeeProfiles.models import EmployeeProfile
 from plan.models import PlanModel
@@ -39,21 +39,24 @@ class FeatureModel(models.Model):
 auditlog.register(FeatureModel)
 
 # assigned task to the employee
-class TaskAssignToEmployee(models.Model):
+class SpecialServicesModel(models.Model):
     name=models.CharField(max_length=100)
     # service_code=models.CharField(max_length=100)
-    plan=models.ForeignKey(PlanModel,on_delete=models.CASCADE,related_name='tasks')
+    # plan=models.ForeignKey(PlanModel,on_delete=models.CASCADE,related_name='tasks')
+    service_code=models.CharField(max_length=1000)
     description=models.TextField()
-    category = models.ManyToManyField(Category)
-    base_price=models.CharField(max_length=100)
+    category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,blank=True)
+    base_price=models.FloatField()
     bill_cycle=models.CharField(choices=BILL_CYCLE,max_length=100)
-    discount=models.CharField(max_length=10,blank=True,null=True)
+    discount=models.FloatField(blank=True,null=True,default=0)
+    region=models.ForeignKey(Region,on_delete=models.CASCADE)
     building=models.ForeignKey(Building,on_delete=models.CASCADE)
-    apratment=models.ManyToManyField(Apartment)
+    apartment=models.ManyToManyField(Apartment,related_name='special_services_apartments')
     auto_renew_enable=models.BooleanField(default=True)
+    discounted_price=models.FloatField(blank=True,null=True)
     worker=models.ForeignKey(User,on_delete=models.CASCADE)
     created_at=models.DateField(auto_now_add=True)
-    package=models.ManyToManyField(FeatureModel)
+    # package=models.ManyToManyField(FeatureModel)
     updated_at=models.DateField(auto_now=True)
     service_icon=models.ImageField(upload_to='./service/icon',blank=True,null=True)
     # status=models.BooleanField(default=True)
@@ -72,6 +75,6 @@ class TaskAssignToEmployee(models.Model):
         raise models.ValidationError("Choose a valid category")
      return value
 
-auditlog.register(TaskAssignToEmployee)
+auditlog.register(SpecialServicesModel)
 
 
