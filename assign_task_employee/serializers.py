@@ -90,7 +90,7 @@ class FeatureSerialzer(serializers.ModelSerializer):
         fields='__all__'
 
 class ServiceDetailsSerializer(serializers.ModelSerializer):
-    category=CategorySerializer(read_only=True,many=True)
+    category=CategorySerializer(read_only=True)
     building=BuildingSerializer(read_only=True)
     # package=FeatureSerialzer(read_only=True,many=True)
     active=serializers.SerializerMethodField(read_only=True)
@@ -170,5 +170,4 @@ class MonthlyTaskReportSerializer(serializers.Serializer):
 
 
 
-   
 

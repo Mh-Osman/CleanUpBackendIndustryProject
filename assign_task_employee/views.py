@@ -14,7 +14,7 @@ class CustomWorkerPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.worker == request.user
 
-
+#this is 
 class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
     queryset = SpecialServicesModel.objects.all()
     serializer_class = SpecialServicesModelSerializer
@@ -36,6 +36,7 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
         return self.queryset
 
             
+from django.db.models import OuterRef, Subquery
 
 class ServiceDetailsListView(ListAPIView):
     permission_classes = [permissions.IsAdminUser]
@@ -44,6 +45,14 @@ class ServiceDetailsListView(ListAPIView):
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','auto_renew_enable'] 
     search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
+    def get_queryset(self):
+        # Subquery to get latest ID per service_code
+        latest_ids_subquery = SpecialServicesModel.objects.filter(
+            service_code=OuterRef('service_code')
+        ).order_by('-created_at').values('id')[:1]
+
+        # Return queryset filtered by latest IDs
+        return SpecialServicesModel.objects.filter(id__in=Subquery(latest_ids_subquery))
 
 
 from .serializers import ServiceDetailsSerializerForEmployee
@@ -54,6 +63,7 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count, Q
 from datetime import timedelta
 class ServiceDetailsShowForEmployeeView(APIView):
+    permission_classes=[permissions.IsAuthenticated]
     def get(self, request, *args, **kwargs):
         user=request.user
         data={
@@ -94,3 +104,18 @@ class EmployeeTaskReportView(APIView):
             .order_by('month')
         )
         return Response(report)
+
+
+class TotalServicesDetailsSerializreView(APIView):
+    def get(self, request, *args, **kwargs):
+          total_service = SpecialServicesModel.objects.values('service_code').distinct().count()
+          active_booking=SpecialServicesModel.objects.filter(Q(status='pending')|Q(status='started')).count()
+          total_revenue = SpecialServicesModel.objects.filter(status='completed').aggregate(
+         total=Sum('discounted_price'))['total'] or 0
+          
+          return Response({
+              'total_services':total_service,
+              'active_booking':active_booking,
+              'total_revenue':total_revenue,
+          })
+        

@@ -136,7 +136,7 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
     
     class Meta:
         model=Subscription
-        fields=['user','plan','building','apartment','status','region','remaining_days','payment','employee']
+        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee']
     
     def get_remaining_days(self, obj):
         if obj.current_period_end:
@@ -164,12 +164,50 @@ class SubscriptionStatusCountSerializer(serializers.Serializer):
 
 from rest_framework import serializers
 
+from rest_framework import serializers
+from .models import InvoiceLineItem
+
 class InvoiceLineItemSerializer(serializers.ModelSerializer):
     total = serializers.ReadOnlyField()
 
     class Meta:
         model = InvoiceLineItem
-        fields = ["description", "service", "quantity", "unit_price", "discount", "tax", "total"]
+        fields = [
+            "description",
+            "service_name",
+            "quantity",
+            "unit_price",
+            "discount",
+            "tax",
+            "total",
+            'sub_total',
+        ]
+
+    def validate(self, attrs):
+        unit_price = attrs.get("unit_price", 0)
+        discount = attrs.get("discount", 0)
+        tax = attrs.get("tax", 0)
+        quantity = attrs.get("quantity", 1)
+
+        # Validation rules
+        if unit_price < 0:
+            raise serializers.ValidationError({"unit_price": "Unit price must be positive."})
+        if discount < 0:
+            raise serializers.ValidationError({"discount": "Discount must be positive."})
+        if tax < 0:
+            raise serializers.ValidationError({"tax": "Tax must be positive."})
+        if quantity <= 0:
+            raise serializers.ValidationError({"quantity": "Quantity must be at least 1."})
+        if discount > 100:
+            raise serializers.ValidationError({"discount": "Discount cannot exceed 100%."})
+        if tax > 100:
+            raise serializers.ValidationError({"tax": "Tax cannot exceed 100%."})
+
+        return attrs
+
+    
+
+    
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -180,36 +218,51 @@ class InvoiceSerializer(serializers.ModelSerializer):
     building_name=serializers.SerializerMethodField(read_only=True)
     apartment_name=serializers.SerializerMethodField(read_only=True)
     region_name=serializers.SerializerMethodField(read_only=True)
-
+    client_name=serializers.SerializerMethodField(read_only=True)
+    plan_name=serializers.SerializerMethodField(read_only=True)
+    tax_percentage=serializers.SerializerMethodField(read_only=True)
+    # sub_total=serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = InvoiceModel
         fields = [
-            "invoice_id", "type", "date_issued", "due_date",
+            "id","invoice_id", "type", "date_issued", "due_date",
             "client",'building',"apartments", "plan", "vendor", 
             "vendor_invoice_file", "note", "file",
-            "line_items", "total_amount","status","building_name","apartment_name","region_name",
+            "line_items", "total_amount","status","building_name","apartment_name","region_name","client_name","plan_name","tax_percentage",'sub_total'
         ]
 
     def create(self, validated_data):
         line_items_data = validated_data.pop("line_items")
-        apartments_data = validated_data.pop("apartments", [])
+        apartments_data = validated_data.pop("apartments",[])
         invoice = InvoiceModel.objects.create(**validated_data)
     
         if apartments_data:
          invoice.apartments.set(apartments_data)
         total = 0
+        subtotal=0
+        if not line_items_data:
+            total=invoice.plan.amount
+            subtotal=invoice.plan.amount
         for item_data in line_items_data:
             item = InvoiceLineItem.objects.create(invoice=invoice, **item_data)
             total += item.total
+            subtotal+=item.sub_total
         invoice.total_amount = total
-        invoice.save(update_fields=["total_amount"])
+        invoice.sub_total=subtotal
+        invoice.save(update_fields=["total_amount","sub_total"])
+        
+
         return invoice
     
     def get_building_name(self,obj):
         if obj.building:
             return obj.building.name
         return None
-    
+    def get_tax_percentage(self,obj):
+       return obj.total_tax_percentage
+    # def get_sub_total(self,obj):
+    #    sub_total=obj.total_amount
+    #    return float(obj.total_amount)-obj.total_tax_percentage
     def get_apartment_name(self,obj):
         name=[]
         if obj.apartments:
@@ -220,3 +273,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
     def get_region_name(self,obj):
         if obj.building and obj.building.region:
           return obj.building.region.name
+    
+    def get_client_name(self,obj):
+       return obj.client.name if obj.client else None
+    
+    def get_plan_name(self,obj):
+       return obj.plan.name if obj.plan else None

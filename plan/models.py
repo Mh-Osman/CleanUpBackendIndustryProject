@@ -45,6 +45,7 @@ class PlanModel(models.Model):
     # @property
     # def amount_after_discount(self):
     #     return self.amount-self.discount
+    
 
 class ServiceLineItem(models.Model):
     plan=models.ForeignKey(PlanModel,on_delete=models.CASCADE, related_name="service_line_items")
@@ -142,25 +143,59 @@ class InvoiceModel(models.Model):
     note = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to="invoices", blank=True, null=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    expense_category=models.ManyToManyField(Category)
+    expense_category=models.ManyToManyField(Category,blank=True)
+    created_at=models.DateTimeField(blank=True,null=True,auto_now_add=True)
+    updated_at=models.DateTimeField(blank=True,null=True,auto_now=True)
+    sub_total=models.FloatField(default=0,blank=True,null=True)
     @property
     def calculated_total(self):
         return sum(item.total for item in self.line_items.all())
+    
 
     def __str__(self):
         return f"{self.invoice_id} - {self.type}"
 
+    @property
+    def total_tax_percentage(self):
+        line_items = self.line_items.all()
+        total_subtotal = 0
+        total_tax_amount = 0
+
+        for item in line_items:
+            subtotal = item.quantity * item.unit_price
+            discount_amount = subtotal * (item.discount / 100)
+            taxable_amount = subtotal - discount_amount
+            tax_amount = taxable_amount * (item.tax / 100)
+
+            total_subtotal += taxable_amount
+            total_tax_amount += tax_amount
+
+        if total_subtotal == 0:
+            return 0
+        return round((total_tax_amount / total_subtotal) * 100, 2)
+    
 
 class InvoiceLineItem(models.Model):
-    invoice = models.ForeignKey(InvoiceModel, on_delete=models.CASCADE, related_name="line_items")
-    description = models.CharField(max_length=255,null=True,blank=True)
-    service = models.ForeignKey('assign_task_employee.FeatureModel', on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(
+        InvoiceModel, on_delete=models.CASCADE, related_name="line_items"
+    )
+    description = models.CharField(max_length=255, null=True, blank=True)
+    service_name = models.CharField(max_length=100, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0,blank=True,null=True)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0,null=True,blank=True)
+    unit_price = models.FloatField()  # changed from DecimalField to FloatField
+    discount = models.FloatField(default=0, blank=True, null=True)  # percentage
+    tax = models.FloatField(default=0, blank=True, null=True)       # percentage
+    sub_total=models.FloatField(default=0,blank=True,null=True)
+    
 
     @property
     def total(self):
-        return (self.quantity * self.unit_price) - self.discount + self.tax
-
+        subtotal = self.quantity * self.unit_price
+        self.sub_total=subtotal
+        self.save()
+        discount_amount = subtotal * (self.discount / 100 if self.discount else 0)
+        tax_amount = subtotal * (self.tax / 100 if self.tax else 0)
+        return subtotal - discount_amount + tax_amount
+    
+    def __str__(self):
+        return f"{self.service_name or self.description} ({self.quantity} × {self.unit_price})"

@@ -18,20 +18,22 @@ from django.db.models import Sum
 
 
 class PlanView(viewsets.ModelViewSet):
-    queryset=PlanModel.objects.all()
+    queryset=PlanModel.objects.all().order_by('-created_at')
     serializer_class=PlanSerailzier
     # permission_classes=[permissions.AllowAny]
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+ 
+        
     
   
           
 class SubscriptionListCreateView(generics.ListCreateAPIView):
-    queryset = Subscription.objects.all()
+    queryset = Subscription.objects.all().order_by('-created_at')
     serializer_class = SubscriptionCreateSerializer
-    permission_classes = [permissions.AllowAny] # need to change and set IsAdminUser
+    permission_classes = [permissions.IsAdminUser]
 
     def perform_create(self, serializer):
         sub=serializer.save()
@@ -67,7 +69,7 @@ class SubscriptionSerializerView(generics.ListAPIView):
                 Q(user=self.request.user) | Q(employee=self.request.user)
             )
         return self.queryset
-
+    
 
 class SubcriptionFullStatusDetailView(APIView):
     permission_classes=[permissions.IsAdminUser]
@@ -258,6 +260,15 @@ class StopSubscription(APIView):
 
         sub.status="canceled"
         sub.save()
+        SubscriptionHistory.objects.create(
+              subscription=sub,
+              amount=sub.plan.amount,
+              action="cancel",
+              start_date=sub.start_date,
+              end_date=sub.current_period_end
+              )
+       
+        return Response({"message":"Resumed Successfully !"})
         return Response({"message":"Subscription Stoped Successfully !"})
 
 
@@ -266,23 +277,39 @@ class StopSubscription(APIView):
 
 # invoice 
 
-
+   
+    
 class InvoiceView(viewsets.ModelViewSet):
-    queryset=InvoiceModel.objects.all()
+    queryset=InvoiceModel.objects.all().order_by('-created_at')
     serializer_class=InvoiceSerializer
-    permission_classes=[permissions.IsAdminUser]
+    def get_permissions(self):
+        request=self.request.method
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
+
+    def get_queryset(self):
+        user=self.request.user
+        if not user.is_staff:
+            return  self.queryset.filter(Q(client=user) | Q(vendor=user))
+        return self.queryset
 
 from  django.db.models import Q
 
 class CalculationsForInvoiceView(APIView):
+        permission_classes=[permissions.IsAdminUser]
         def get(self, request, *args, **kwargs):
             total=InvoiceModel.objects.aggregate(total=Sum('total_amount'))['total'] or 0
             expense=InvoiceModel.objects.filter(Q(vendor__isnull=False),Q(client__isnull=True)).aggregate(expense=Sum('total_amount'))['expense'] or 0
             sales=InvoiceModel.objects.filter(Q(client__isnull=False),Q(vendor__isnull=True)).aggregate(expense=Sum('total_amount'))['expense'] or 0
             total_invoice=InvoiceModel.objects.all().count()
+            paid=InvoiceModel.objects.filter(status='paid').count()
+            unpaid=InvoiceModel.objects.filter(status='unpaid').count()
             return Response({
             "total":total,
             "sales":sales,
             "expense":expense,
-            "total_invoice":total_invoice
+            "total_invoice":total_invoice,
+            "paid":paid,
+            "unpaid":unpaid,
         })
