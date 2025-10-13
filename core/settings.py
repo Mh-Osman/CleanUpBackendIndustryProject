@@ -90,7 +90,8 @@ INSTALLED_APPS = [
     'corsheaders',
     "auditlog",
     'all_history',
-    
+    #salah uddin
+    'admin_dashboard',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

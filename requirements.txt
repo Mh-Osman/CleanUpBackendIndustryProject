@@ -1,19 +1,17 @@
 asgiref==3.9.2
-auditlog==0.0.5
-certifi==2025.10.5
+certifi==2025.8.3
 charset-normalizer==3.4.3
 Django==5.2.6
-django-auditlog @ git+https://github.com/jazzband/django-auditlog.git@85056b73c35af0b307bd10077356207ec193ae9b
+django-auditlog==3.3.0
 django-cors-headers==4.9.0
-django-filter==25.2
-django-jsonfield==1.4.1
-django-utils-six==2.0
+django-filter==25.1
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-yasg==1.21.11
 geopandas==1.1.1
 idna==3.10
 inflection==0.5.1
+Markdown==3.9
 networkx==3.5
 numpy==2.3.3
 osmnx==2.0.6
@@ -28,11 +26,11 @@ python-decouple==3.8
 pytz==2025.2
 PyYAML==6.0.3
 requests==2.32.5
-rest-framework-simplejwt==0.0.2
 shapely==2.1.2
 six==1.17.0
 sqlparse==0.5.3
-stripe==13.0.1
+stripe==12.5.1
+timedelta==2020.12.3
 typing_extensions==4.15.0
 tzdata==2025.2
 uritemplate==4.2.0
