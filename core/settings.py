@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'corsheaders',
     "auditlog",
     'all_history',
+<<<<<<< HEAD
     'debug_toolbar', #osman
     'subscriptions', #osman
  
@@ -97,7 +98,22 @@ INSTALLED_APPS = [
      
 
     
+=======
+    #salah uddin
+    'admin_dashboard',
+>>>>>>> origin/history_salah
 ]
+# for use celery 
+
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Dhaka'
+
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 

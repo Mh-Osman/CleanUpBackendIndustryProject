@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import HistoryView
+from .views import DashboardRecentActivityView
 urlpatterns = [
-    path('list/',HistoryView.as_view()),
+    path('list/',DashboardRecentActivityView.as_view()),
     ]
