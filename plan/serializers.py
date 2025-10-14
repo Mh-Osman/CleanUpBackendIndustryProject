@@ -136,8 +136,8 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
     
     class Meta:
         model=Subscription
-        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee']
-    
+        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee','canceled_at','paused_at']
+        read_only_fields=['canceled_at','paused_at']
     def get_remaining_days(self, obj):
         if obj.current_period_end:
             delta = obj.current_period_end- datetime.now().date()

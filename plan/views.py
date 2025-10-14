@@ -71,6 +71,7 @@ class SubscriptionSerializerView(generics.ListAPIView):
         return self.queryset
     
 
+# full subscription view
 class SubcriptionFullStatusDetailView(APIView):
     permission_classes=[permissions.IsAdminUser]
 
@@ -190,6 +191,7 @@ class PauseSubscription(APIView):
        
         sub.status = "paused"
         sub.pause_until = datetime.now() + timedelta(days=30)
+        sub.paused_at=timezone.now().date()
         sub.save()
         SubscriptionHistory.objects.create(
               subscription=sub,
@@ -230,6 +232,7 @@ class ResumeSubscription(APIView):
     
         sub.status = "active"  
         sub.pause_until = None 
+        sub.paused_at=None
         sub.save()
         SubscriptionHistory.objects.create(
               subscription=sub,
@@ -259,6 +262,7 @@ class StopSubscription(APIView):
         #   return Response({"error": f"Stripe error: {str(e)}"}, status=400)
 
         sub.status="canceled"
+        sub.canceled_at=timezone.now().date()
         sub.save()
         SubscriptionHistory.objects.create(
               subscription=sub,
@@ -268,7 +272,6 @@ class StopSubscription(APIView):
               end_date=sub.current_period_end
               )
        
-        return Response({"message":"Resumed Successfully !"})
         return Response({"message":"Subscription Stoped Successfully !"})
 
 
