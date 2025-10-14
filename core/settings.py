@@ -90,18 +90,17 @@ INSTALLED_APPS = [
     'corsheaders',
     "auditlog",
     'all_history',
-<<<<<<< HEAD
+# <<<<<<< HEAD
     'debug_toolbar', #osman
-    'subscriptions', #osman
+    #'subscriptions', #osman
  
     
      
 
-    
-=======
+
     #salah uddin
     'admin_dashboard',
->>>>>>> origin/history_salah
+#>>>>>>> origin/history_salah
 ]
 # for use celery 
 
@@ -144,7 +143,8 @@ ALLOWED_HOSTS = [
     ".ngrok-free.app",
     "127.0.0.1:6868",
     "127.0.0.1:4041",
-    "10.10.13.61"
+    "10.10.13.61",
+    "10.10.13.75"
 
 ]
 CSRF_TRUSTED_ORIGINS = [
