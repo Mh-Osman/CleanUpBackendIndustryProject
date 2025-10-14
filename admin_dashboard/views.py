@@ -7,6 +7,8 @@ from datetime import datetime
 from rest_framework.response import Response
 from .serializers import  DashBoardTopSerializer
 from django.db.models import Sum
+from auditlog.models import LogEntry
+from all_history.serializers import HistoryTrackSerializer
 User=get_user_model()
 import calendar
 # Create your views here.
@@ -63,6 +65,8 @@ class DashBoardTopView(APIView):
             ).values(
                 'created_at', 'sub_total'
             ).order_by('-created_at')
+         
+           
 
         # Format each sale record
          formatted_sales = []
@@ -73,14 +77,24 @@ class DashBoardTopView(APIView):
                     "amount": float(sale['sub_total']),
                     "month": calendar.month_name[created_time.month]
                 })
+         recent_logs = (
+            LogEntry.objects.select_related("actor", "content_type")
+            .filter(timestamp__year=year, timestamp__month=month)
+            .order_by("-timestamp")[:10]
+        )
+         logs_serializer = HistoryTrackSerializer(recent_logs, many=True)
+         
          return Response(
             {
                'clients':clients,
                'month_new_subscription':new_subscription,
                'month_revenue_from_invoice':month_total_revenue,
                'month_new_added_building':total_building,
+               'outgoing_sales': formatted_sales,
                'analitycs':analitycs,
-               'outgoing_sales': formatted_sales
+               'recent_activity':logs_serializer.data,
+               
+
             }
          )
          
