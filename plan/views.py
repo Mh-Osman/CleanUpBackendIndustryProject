@@ -11,6 +11,7 @@ from django.utils import timezone
 from .serializers import PlanSerailzier,SubscribeSerializerDetails,SubscriptionStatusCountSerializer,InvoiceLineItemSerializer,InvoiceSerializer,CalculationsForInvoice,SubscriptionCreateSerializer
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework import generics
 from django.db.models import Sum
 
@@ -28,41 +29,60 @@ class PlanView(viewsets.ModelViewSet):
  
         
     
-  
+import uuid
+from django.utils import timezone
           
-class SubscriptionListCreateView(generics.ListCreateAPIView):
+class SubscriptionListCreateView(viewsets.ModelViewSet):
     queryset = Subscription.objects.all().order_by('-created_at')
     serializer_class = SubscriptionCreateSerializer
     permission_classes = [permissions.IsAdminUser]
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
+    search_fields = ['status']
 
     def perform_create(self, serializer):
-        sub=serializer.save()
+        subscription = serializer.save()
+        date=timezone.now()
         SubscriptionHistory.objects.create(
-              subscription=sub,
-              amount=sub.plan.amount,
+              subscription=subscription,
+              amount=subscription.plan.amount,
               action="active",
-              start_date=sub.start_date,
-              end_date=sub.current_period_end
+              start_date=subscription.start_date,
+              end_date=subscription.current_period_end
               )
+        invoice=InvoiceModel.objects.create(
+            invoice_id=str(uuid.uuid4()),  # unique invoice ID
+            type="outgoing",
+            date_issued=subscription.start_date,
+            due_date=subscription.current_period_end,
+            client=subscription.user,
+            plan=subscription.plan,
+            note=f"{self.request.user.name} subscribed",
+            status="paid" if getattr(subscription, "payment_method", "prepaid") == "prepaid" else "unpaid",
+            total_amount=subscription.plan.amount,
+            building=subscription.building
+        )
+               
 
 
 
-class CustomPermissionForSubscriptionEmployeeAndAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return [permissions.IsAuthenticated]
+# class CustomPermissionForSubscriptionEmployeeAndAdmin(permissions.BasePermission):
+#     def has_permission(self, request, view):
+#         return [permissions.IsAuthenticated]
         
-    def has_object_permission(self, request, view, obj):
-        return [permissions.IsAdminUser]
+#     def has_object_permission(self, request, view, obj):
+#         return [permissions.IsAdminUser]
 
 
 class SubscriptionSerializerView(generics.ListAPIView):
     # permission_classes = [permissions.IsAuthenticated]
-    permission_classes = [CustomPermissionForSubscriptionEmployeeAndAdmin]
+    permission_classes = [permissions.IsAuthenticated]
     # permission_classes = [permissions.AllowAny]
     queryset=Subscription.objects.all().order_by("-created_at")
     serializer_class=SubscribeSerializerDetails
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['status', 'plan', 'user', 'building', 'region', 'apartment']
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
+    search_fields = ['status']
     def get_queryset(self):
         if not self.request.user.is_staff:
             return self.queryset.filter(
@@ -285,6 +305,8 @@ class StopSubscription(APIView):
 class InvoiceView(viewsets.ModelViewSet):
     queryset=InvoiceModel.objects.all().order_by('-created_at')
     serializer_class=InvoiceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status','type']
     def get_permissions(self):
         request=self.request.method
         if self.request.method in permissions.SAFE_METHODS:

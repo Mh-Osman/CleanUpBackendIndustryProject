@@ -52,6 +52,7 @@ urlpatterns = [
    #salah uddin
    path('api/v1/all_history/',include('all_history.urls')),
    path('api/v1/dashboard/',include('admin_dashboard.urls')),
+   path('api/v1/admin/report/',include('reportatanalysis.urls')),
 ]
 if settings.DEBUG:
     import debug_toolbar

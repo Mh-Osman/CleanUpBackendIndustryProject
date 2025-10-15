@@ -16,7 +16,7 @@ class CustomWorkerPermission(permissions.BasePermission):
 
 #this is 
 class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
-    queryset = SpecialServicesModel.objects.all()
+    queryset = SpecialServicesModel.objects.all().order_by('-created_at')
     serializer_class = SpecialServicesModelSerializer
 
     def get_permissions(self):
