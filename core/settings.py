@@ -101,6 +101,8 @@ INSTALLED_APPS = [
     #salah uddin
     'admin_dashboard',
 #>>>>>>> origin/history_salah
+#osman
+    'rating',
 ]
 # for use celery 
 

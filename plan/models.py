@@ -70,7 +70,7 @@ class Subscription(models.Model):
         ("inactive","Inactive"),
         ("paused","Paused"),
         ("canceled","Canceled"),
-        ("past_due","past_due"),
+        ("past_due","past_due"),# salah uddin ...he didn't renewe after month because after 30 days subscription is renewed with pay
     )
     #salah uddin
     PAYMENT=(

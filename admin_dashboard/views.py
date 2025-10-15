@@ -21,7 +21,7 @@ class DashBoardTopView(APIView):
          month=serializer.validated_data.get('month')
          year=serializer.validated_data.get('year')
          clients=User.objects.filter(
-            user_type="employee",
+            user_type="client",
             date_joined__month=month,
             date_joined__year=year
          ).count()

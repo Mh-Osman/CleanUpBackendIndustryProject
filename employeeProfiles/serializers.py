@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from .models import EmployeeProfile, EmployeeSalary #Attendance,EmployeeApartmentAssignment
 from users.models import CustomUser
-from invoice_request_from_client.models import InvoiceRequestFromEmployee
-
+# from invoice_request_from_client.models import InvoiceRequestFromEmployee
+from plan.models import Subscription
+from assign_task_employee.models import SpecialServicesModel
+from rating.models import RatingModel
+from django.db.models import Avg
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeProfile
@@ -16,9 +19,13 @@ class EmployeeProfileSerializer(serializers.ModelSerializer):
 class EmployeeWithProfileSerializer(serializers.ModelSerializer):
     employee_profile = EmployeeProfileSerializer(required=False)
 
+    tasks_completed = serializers.SerializerMethodField(read_only=True)
+    client_rating = serializers.SerializerMethodField(read_only=True)
+
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone', 'is_active', 'date_joined', 'employee_profile']
+        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'employee_profile', 'tasks_completed' , 'client_rating']
         read_only_fields = ['id', 'date_joined']
     def validate(self, attrs):
         profile_data = attrs.get('employee_profile')
@@ -67,7 +74,19 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
 
         return instance
     
-   
+
+    def get_tasks_completed(self, obj):
+        assigned_subscriptions = Subscription.objects.filter(employee=obj, status='past_due').count()
+        special_services = SpecialServicesModel.objects.filter(worker=obj, status='completed').count()
+
+        return assigned_subscriptions + special_services
+    
+    def get_client_rating(self, obj):
+        ratings = RatingModel.objects.filter(employee=obj)
+        if ratings.exists():
+            return round(ratings.aggregate(Avg('rating'))['rating__avg'], 2)
+        return None
+
 
 class EmployeeSalarySerializer(serializers.ModelSerializer):
     employee = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='employee'), required=True)
