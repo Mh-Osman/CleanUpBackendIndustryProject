@@ -6,8 +6,13 @@ from .views import PlanView,PauseSubscription,ResumeSubscription,StopSubscriptio
 
 router =DefaultRouter()
 router.register('list',PlanView,basename='plan')
+# <<<<<<< HEAD
 router.register('invoice/list',InvoiceView)
-router.register('subscriptions-create',SubscriptionListCreateView,basename='subscription-list-create')
+#router.register('subscriptions-create',SubscriptionListCreateView,basename='subscription-list-create')
+
+router.register('invoice/list',InvoiceView,basename='invoice')
+router.register('subscriptions-create',SubscriptionListCreateView,basename='subscription-create')
+#>>>>>>> origin/new-testing
 
 urlpatterns = [
     path('',include(router.urls)),

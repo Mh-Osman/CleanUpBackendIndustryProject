@@ -20,7 +20,7 @@ class PlanSerailzier(serializers.ModelSerializer):
     # total=serializers.ReadOnlyField()
     class Meta:
         model=PlanModel
-        fields=["name","plan_code","interval","amount","description","is_active","category","discount","auto_renewal","service_line_items"]
+        fields=["id","name","plan_code","interval","amount","description","is_active","category","discount","auto_renewal","service_line_items"]
         read_only_fields=["created_at","updated_at"]
     def validate(self, attrs):
       amount = attrs.get('amount')

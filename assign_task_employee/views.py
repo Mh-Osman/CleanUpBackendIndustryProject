@@ -16,8 +16,11 @@ class CustomWorkerPermission(permissions.BasePermission):
 
 #this is 
 class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
-    queryset = SpecialServicesModel.objects.all()
+    queryset = SpecialServicesModel.objects.all().order_by('-created_at')
     serializer_class = SpecialServicesModelSerializer
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    filterset_fields = ['service_code','status','auto_renew_enable'] 
+    search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
@@ -42,9 +45,7 @@ class ServiceDetailsListView(ListAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = ServiceDetailsSerializer
     queryset = SpecialServicesModel.objects.all()
-    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
-    filterset_fields = ['status','auto_renew_enable'] 
-    search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
+   
     def get_queryset(self):
         # Subquery to get latest ID per service_code
         latest_ids_subquery = SpecialServicesModel.objects.filter(

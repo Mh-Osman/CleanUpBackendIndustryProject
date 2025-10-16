@@ -95,8 +95,8 @@ class Subscription(models.Model):
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
     employee=models.ManyToManyField(User,related_name='subscription_employee')
     # past_due_date=models.DateTimeField(auto_now_add=True,null=True,blank=True)
-    canceled_at=models.DateTimeField(auto_now_add=True,null=True,blank=True)
-    paused_at=models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    canceled_at=models.DateTimeField(null=True,blank=True)
+    paused_at=models.DateTimeField(null=True,blank=True)
 
 
 

@@ -37,7 +37,7 @@ class DashBoardTopView(APIView):
             created_at__month=month,
             created_at__year=year,
             type='outgoing'
-         ).aggregate(total=Sum('sub_total'))['total'] or 0
+         ).aggregate(total=Sum('total_amount'))['total'] or 0
 
 
          total_building=Building.objects.filter(
@@ -63,7 +63,7 @@ class DashBoardTopView(APIView):
                 created_at__year=year,
                 type='outgoing'
             ).values(
-                'created_at', 'sub_total'
+                'created_at', 'total_amount'
             ).order_by('-created_at')
          
            
@@ -74,7 +74,7 @@ class DashBoardTopView(APIView):
                 created_time = sale['created_at']
                 formatted_sales.append({
                     "time": created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "amount": float(sale['sub_total']),
+                    "amount": float(sale['total_amount']),
                     "month": calendar.month_name[created_time.month]
                 })
          recent_logs = (
@@ -88,7 +88,7 @@ class DashBoardTopView(APIView):
             {
                'clients':clients,
                'month_new_subscription':new_subscription,
-               'month_revenue_from_invoice':month_total_revenue,
+               'month_sales':month_total_revenue,
                'month_new_added_building':total_building,
                'outgoing_sales': formatted_sales,
                'analitycs':analitycs,
