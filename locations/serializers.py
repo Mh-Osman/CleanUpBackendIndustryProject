@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import  Building, Apartment, Region
 from users.models import CustomUser
 from django.db import transaction
+from plan.models import Subscription
+from assign_task_employee.models import SpecialServicesModel
+from rating.models import RatingModel
 
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,12 +20,32 @@ class ApartmentSerializerForBuilding(serializers.ModelSerializer):
 
 class BuildingSerializer(serializers.ModelSerializer):
     apartments = ApartmentSerializerForBuilding(many=True, read_only=True)
+    region_name = serializers.SerializerMethodField(read_only=True)
+  
+    total_apartments = serializers.SerializerMethodField()
+    active_apartments_in_building = serializers.SerializerMethodField()
+
+  
     class Meta:
         model = Building
         fields = "__all__"  # Building এর ফিল্ডগুলো
         read_only_fields = ['id']
 
-    
+
+    def get_total_apartments(self, obj):
+        return Apartment.objects.filter(building=obj).count()
+
+    def get_active_apartments_in_building(self, obj):
+        from_subscription = Subscription.objects.filter(status='active', apartment__building=obj).count()
+        form_special_service = SpecialServicesModel.objects.filter(
+            status__in=['pending','started'], apartment__building=obj
+        ).count()
+        total_active = from_subscription + form_special_service
+        return total_active
+
+    def get_region_name(self, obj):
+        return obj.region.name if obj.region else None
+
 
 class ApartmentSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='client'), required=True, allow_null=True)

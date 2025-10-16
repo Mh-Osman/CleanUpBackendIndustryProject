@@ -7,11 +7,12 @@ from .views import PlanView,PauseSubscription,ResumeSubscription,StopSubscriptio
 router =DefaultRouter()
 router.register('list',PlanView,basename='plan')
 router.register('invoice/list',InvoiceView)
+router.register('subscriptions-create',SubscriptionListCreateView,basename='subscription-list-create')
 
 urlpatterns = [
     path('',include(router.urls)),
     # path("create-checkout-session/", CreateCheckoutSession.as_view(), name="checkout"),
-    path('subscriptions-create/',SubscriptionListCreateView.as_view(), name='subscription-list-create'),
+    # path('subscriptions-create/',SubscriptionListCreateView, name='subscription-list-create'),
     path("subscription/<int:subscription_id>/pause/", PauseSubscription.as_view()),
     path("subscription/<int:subscription_id>/stop/", StopSubscription.as_view()),
     path("subscription/<int:subscription_id>/resume/", ResumeSubscription.as_view()),

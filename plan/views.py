@@ -30,7 +30,7 @@ class PlanView(viewsets.ModelViewSet):
     
   
           
-class SubscriptionListCreateView(generics.ListCreateAPIView):
+class SubscriptionListCreateView(viewsets.ModelViewSet):
     queryset = Subscription.objects.all().order_by('-created_at')
     serializer_class = SubscriptionCreateSerializer
     permission_classes = [permissions.IsAdminUser]

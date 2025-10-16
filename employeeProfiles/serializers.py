@@ -21,11 +21,12 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
 
     tasks_completed = serializers.SerializerMethodField(read_only=True)
     client_rating = serializers.SerializerMethodField(read_only=True)
+    total = serializers.SerializerMethodField(read_only=True)
 
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'employee_profile', 'tasks_completed' , 'client_rating']
+        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'employee_profile', 'tasks_completed' , 'client_rating' , 'total']
         read_only_fields = ['id', 'date_joined']
     def validate(self, attrs):
         profile_data = attrs.get('employee_profile')
@@ -86,6 +87,9 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
         if ratings.exists():
             return round(ratings.aggregate(Avg('rating'))['rating__avg'], 2)
         return None
+    
+    def get_total(self, obj):
+        return SpecialServicesModel.objects.filter(worker=obj).count() + Subscription.objects.filter(employee=obj).count()
 
 
 class EmployeeSalarySerializer(serializers.ModelSerializer):

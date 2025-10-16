@@ -3,8 +3,10 @@ from rest_framework import serializers
 from .models import ClientPhone, CustomUser, ClientProfile , ClientPhone
 
 from plan.models import PlanModel
-
-
+from plan.models import Subscription
+from assign_task_employee.models import SpecialServicesModel
+from rating.models import RatingModel
+from locations.models import Building, Apartment, Region
 
 class ClientProfileSerializer(serializers.ModelSerializer):
 
@@ -30,10 +32,17 @@ class ClientPhoneSerializer(serializers.ModelSerializer):
 class ClientSerializer(serializers.ModelSerializer):
     client_profile = ClientProfileSerializer(required=False)
     extra_phones = ClientPhoneSerializer(many=True, required=False)
-    
+   
+    each_client_services = serializers.SerializerMethodField(read_only=True)
+   # each_total_services = serializers.SerializerMethodField(read_only=True)
+    each_client_pay = serializers.SerializerMethodField(read_only=True)
+    each_client_building = serializers.SerializerMethodField(read_only=True)
+    each_client_apartment = serializers.SerializerMethodField(read_only=True)
+ 
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined','client_profile', 'extra_phones']
+        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined','client_profile', 'extra_phones',
+                  'each_client_services', 'each_client_pay', 'each_client_building', 'each_client_apartment']
         read_only_fields = ['id', 'date_joined']
 
     # ---------------- Create ----------------
@@ -87,4 +96,54 @@ class ClientSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Prime Phone number already in use.")
         return value
 
-    
+    def get_each_client_services(self, obj):
+            """
+            Returns the total number of active subscriptions +
+            active special services for a given client.
+            """
+            # Count active subscriptions for this client
+            subscriptions_count = Subscription.objects.filter(
+                user=obj, status="active"
+            ).count()
+
+            # Count active special services (status 'started' or 'pending')
+            special_services_count = SpecialServicesModel.objects.select_related("apartment").filter(
+                apartment__client=obj, status__in=["started", "pending"]
+            ).count()
+
+            return subscriptions_count + special_services_count
+
+    def get_each_client_pay(self, obj):
+        """
+        Returns total payment from subscriptions + completed special services.
+        For subscriptions, uses plan.amount.
+        For special services, uses base_price - discount.
+        """
+        total_pay = 0
+
+        # Subscription payments
+        subscriptions = Subscription.objects.filter(user=obj, status="active").select_related("plan")
+        total_pay += sum(sub.plan.amount for sub in subscriptions if sub.plan)
+
+        # Completed special services
+        special_services = SpecialServicesModel.objects.filter(
+            worker=obj,
+            status="completed"
+        )
+        total_pay += sum(service.base_price - (service.discount or 0) for service in special_services)
+
+        return total_pay
+
+    def get_each_client_building(self, obj):
+        """
+        Returns number of distinct buildings the client has apartments in.
+        """
+        buildings_count = Apartment.objects.filter(client=obj).values("building").distinct().count()
+        return buildings_count
+
+    def get_each_client_apartment(self, obj):
+        """
+        Returns number of apartments the client owns or is linked to.
+        """
+        apartments_count = Apartment.objects.filter(client=obj).count()
+        return apartments_count
