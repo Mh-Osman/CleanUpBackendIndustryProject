@@ -9,6 +9,7 @@ from .serializers import UserSerializer, OTPVerifySerializer, ResetPasswordSeria
 from django.utils import timezone
 import random
 from .utils import send_otp_email
+from clientProfiles.models import ClientProfile , ClientPhone
 
 # ✅ Register
 class RegisterAPIView(APIView):
@@ -18,6 +19,11 @@ class RegisterAPIView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            # create client profile
+            if user.user_type == 'client':
+                ClientProfile.objects.create(user=user)
+                ClientPhone.objects.create(user=user, phone_number=user.prime_phone)
+            # generate and send OTP
             otp = OTP.objects.create(user=user, code=random.randint(1000,9999))
             send_otp_email(user.email, otp.code)
             return Response({"message":"OTP sent. Verify to activate account."}, status=status.HTTP_201_CREATED)
@@ -68,16 +74,19 @@ class LoginAPIView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(request, email=email, password=password)
+        print(user)
         if user:
             if not user.is_active:
                 return Response({"error":"Account not verified"}, status=status.HTTP_403_FORBIDDEN)
             refresh = RefreshToken.for_user(user)
+            user.last_login = timezone.now()
+            user.save()
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "user": UserSerializer(user).data
             }, status=status.HTTP_200_OK)
-        return Response({"error":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"error":"Invalid User"})
 
 # ✅ Forget Password
 class ForgetPasswordAPIView(APIView):
@@ -116,27 +125,5 @@ class ResetPasswordAPIView(APIView):
                 return Response({"error":"Invalid OTP or email"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import BasePermission
-
-
-class IsAdminOrEmployee(BasePermission):
-    """
-    Allows access only to admin and employee users.
-    """
-    def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and 
-                   request.user.role in ['admin', 'employee'])
-class UserListAPIView(ListAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrEmployee]
-    pagination_class = PageNumberPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['email', 'phone', 'role']
-    ordering_fields = ['date_joined', 'email']
 
 

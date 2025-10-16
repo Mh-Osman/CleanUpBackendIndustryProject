@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
-
+STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
 # Email Settings
@@ -32,28 +34,24 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "randomid.ngrok-free.app",
-    'lisa-nondisposable-judgingly.ngrok-free.app',
-]
-
 
 
 # DRF JWT Authentication
 REST_FRAMEWORK = {
+    
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
+        'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
 
@@ -76,10 +74,49 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
     'rest_framework_simplejwt',
     'users',
+    'locations',
+    'clientProfiles',
+    'services_pakages',
+    'employeeProfiles',
+    'assign_task_employee',
+    'plan',
+    'invoice_request_from_client.apps.InvoiceRequestFromClientConfig',
+    'drf_yasg',
+    # <<<<<<< gani
+    'google_map',
+    'corsheaders',
+    "auditlog",
+    'all_history',
+# <<<<<<< HEAD
+    'debug_toolbar', #osman
+    #'subscriptions', #osman
+ 
     
+     
+
+
+    #salah uddin
+    'admin_dashboard',
+#>>>>>>> origin/history_salah
+#osman
+    'rating',
 ]
+# for use celery 
+
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Dhaka'
+
+
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -89,6 +126,39 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
+]
+
+INTERNAL_IPS = [ #osman
+
+    "127.0.0.1",
+    "10.10.13.61",
+
+]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "randomid.ngrok-free.app",
+    ".ngrok-free.app",
+    "127.0.0.1:6868",
+    "127.0.0.1:4041",
+    "10.10.13.61",
+    "10.10.13.75"
+
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://398bac921dd6.ngrok-free.app",
+   
+]
+
+
+CSRF_TRUSTED_ORIGINS = [
+   
+    "https://*.ngrok-free.app",
+    "http://127.0.0.1:6868"
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -96,7 +166,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -118,6 +188,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / config("DATABASE_NAME"),
+        "OPTIONS": {
+            "timeout": 20,  # wait 20 seconds if DB locked
+        },
     }
 }
 
@@ -158,6 +231,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
