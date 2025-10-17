@@ -123,11 +123,10 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
          
-
-    
+from users.serializers import UserSerializer
 
 class SubscribeSerializerDetails(serializers.ModelSerializer):
-    user=ClientProfileSerializer(read_only=True)
+    user=UserSerializer(read_only=True)
     plan=PlanSerailzier(read_only=True)
     building=BuildingSerializer(read_only=True)
     apartment=ApartmentSerializer(read_only=True)

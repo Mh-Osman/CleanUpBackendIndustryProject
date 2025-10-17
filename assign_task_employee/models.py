@@ -38,6 +38,11 @@ class FeatureModel(models.Model):
 
 auditlog.register(FeatureModel)
 
+
+
+
+   
+
 # assigned task to the employee
 class SpecialServicesModel(models.Model):
     name=models.CharField(max_length=100)
@@ -77,4 +82,18 @@ class SpecialServicesModel(models.Model):
 
 auditlog.register(SpecialServicesModel)
 
+CHOISE_RATING=(
+('1','1'),
+('2','2'),
+('3','3'),
+('4','4'),
+('5','5')
+)
+class RatingModelForService(models.Model):
+   client=models.ForeignKey(User,on_delete=models.CASCADE)
+   service=models.ForeignKey(SpecialServicesModel,on_delete=models.CASCADE)
+   Rating=models.CharField(max_length=200,choices=CHOISE_RATING)
+   review_message=models.CharField(blank=True,null=True)
+   created_at=models.DateTimeField(auto_now_add=True,null=True,blank=True)
+   updated_at=models.DateField(auto_now=True,null=True,blank=True)
 

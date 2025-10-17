@@ -169,5 +169,32 @@ class MonthlyTaskReportSerializer(serializers.Serializer):
     this_month_revenue=serializers.IntegerField()
 
 
+from .models import RatingModelForService
 
+class RatingForSpecialServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RatingModelForService
+        fields = '__all__'
 
+    def validate(self, attrs):
+        client = self.context['request'].user
+        service= attrs.get('service')
+
+   
+        if not SpecialServicesModel.objects.filter(id=service.id, apartment__client=client).exists():
+            raise serializers.ValidationError(
+                "Hey brother! First buy the service, then try to review!"
+            )
+
+        
+        if RatingModelForService.objects.filter(client=client, service=service).exists():
+            raise serializers.ValidationError(
+                "A user can only give one review for a service"
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        # Assign the current user as client
+        validated_data['client'] = self.context['request'].user
+        return super().create(validated_data)
