@@ -59,6 +59,10 @@ urlpatterns = [
 # =======
    path('api/v1/admin/report/',include('reportatanalysis.urls')),
 # >>>>>>> origin/new-testing
+
+#osman
+path('api/v1/',include('employeedashboard.urls')),
+#salah uddin')
 ]
 if settings.DEBUG:
     import debug_toolbar
