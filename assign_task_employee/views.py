@@ -19,7 +19,7 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
     queryset = SpecialServicesModel.objects.all().order_by('-created_at')
     serializer_class = SpecialServicesModelSerializer
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
-    filterset_fields = ['service_code','status','auto_renew_enable'] 
+    filterset_fields = ['service_code','status','auto_renew_enable','category','status'] 
     search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
 
     def get_permissions(self):
@@ -45,6 +45,10 @@ class ServiceDetailsListView(ListAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = ServiceDetailsSerializer
     queryset = SpecialServicesModel.objects.all()
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
+    filterset_fields = ['service_code','status','auto_renew_enable','category','status'] 
+    search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
+
    
     def get_queryset(self):
         # Subquery to get latest ID per service_code
@@ -106,7 +110,11 @@ class EmployeeTaskReportView(APIView):
         )
         return Response(report)
 
-
+from .models import RatingModelForService
+from django.db.models import Avg, IntegerField
+from django.db.models.functions import Cast
+from .serializers import RatingForSpecialServiceSerializer
+from rest_framework import status
 class TotalServicesDetailsSerializreView(APIView):
     def get(self, request, *args, **kwargs):
           total_service = SpecialServicesModel.objects.values('service_code').distinct().count()
@@ -114,9 +122,37 @@ class TotalServicesDetailsSerializreView(APIView):
           total_revenue = SpecialServicesModel.objects.filter(status='completed').aggregate(
          total=Sum('discounted_price'))['total'] or 0
           
+          average = RatingModelForService.objects.all().annotate(
+              rating_int=Cast('Rating', IntegerField())
+           ).aggregate(Avg('rating_int'))['rating_int__avg'] or 0
+
+
+          
           return Response({
               'total_services':total_service,
               'active_booking':active_booking,
               'total_revenue':total_revenue,
+              'average_rating_of_service':average
           })
-        
+
+
+
+class RatingForeSpecialServiceView(APIView):
+    permission_classes=[permissions.IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        serializer = RatingForSpecialServiceSerializer(
+            data=request.data,
+            context={'request': request}  # Pass request in context
+        )
+
+        if serializer.is_valid():
+            # Save with current user
+            serializer.save(client=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        ratings = RatingModelForService.objects.all().order_by('-created_at')
+        if not request.user.is_staff:
+            ratings = ratings.filter(client=request.user)
+        serializer = RatingForSpecialServiceSerializer(ratings, many=True)
+        return Response(serializer.data)
