@@ -67,3 +67,12 @@ def location_overview(request):
         "total_active_apartments": total_active_apartments,
         "total_inactive_apartments": total_inactive_apartments
     })
+
+
+class RegionDetailViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns all regions with nested buildings, or a single region by ID.
+    """
+    queryset = Region.objects.all()
+    serializer_class = RegionDetailSerializer
+    permission_classes = [IsAuthenticated]
