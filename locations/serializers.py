@@ -7,10 +7,14 @@ from assign_task_employee.models import SpecialServicesModel
 from rating.models import RatingModel
 
 class RegionSerializer(serializers.ModelSerializer):
+
+    
     class Meta:
         model = Region
         fields = ['id', 'name']
         read_only_fields = ['id']
+
+    
 
 class ApartmentSerializerForBuilding(serializers.ModelSerializer):
     class Meta:
@@ -178,3 +182,19 @@ class ApartmentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
             
+
+class RegionDetailSerializer(serializers.ModelSerializer):
+    buildings = BuildingSerializer(many=True, read_only=True)
+    total_buildings = serializers.SerializerMethodField()
+    total_apartments = serializers.SerializerMethodField()
+    class Meta:
+        model = Region
+        fields = ['id', 'name', 'total_buildings', 'total_apartments', 'buildings']
+        read_only_fields = ['id']
+
+    
+    def get_total_buildings(self, obj):
+        return Building.objects.filter(region=obj).count()
+
+    def get_total_apartments(self, obj):
+        return Apartment.objects.filter(building__region=obj).count()
