@@ -48,6 +48,7 @@ class SubscriptionListCreateView(viewsets.ModelViewSet):
               amount=subscription.plan.amount,
               action="active",
               start_date=subscription.start_date,
+            #   next_payment_date=subscription.next_payment_date,
               end_date=subscription.current_period_end
               )
         invoice=InvoiceModel.objects.create(
@@ -82,7 +83,7 @@ class SubscriptionSerializerView(generics.ListAPIView):
     serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
-    search_fields = ['status']
+    search_fields = ['status','plan__plan_code','plan__name','building__name','apartment__apartment_code','region__name']
     def get_queryset(self):
         if not self.request.user.is_staff:
             return self.queryset.filter(
@@ -305,8 +306,9 @@ class StopSubscription(APIView):
 class InvoiceView(viewsets.ModelViewSet):
     queryset=InvoiceModel.objects.all().order_by('-created_at')
     serializer_class=InvoiceSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','type']
+    search_fields = ['invoice_id', 'client__name', 'vendor__name',"plan__plan_code","plan__name","plan__amount","building__name","type","date_issued","due_date","status"]
     def get_permissions(self):
         request=self.request.method
         if self.request.method in permissions.SAFE_METHODS:

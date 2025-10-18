@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Subscription,InvoiceModel # import your Invoice model
 from datetime import date
-
+import uuid
 @receiver(post_save, sender=Subscription)
 def create_invoice_for_subscription(sender, instance, created, **kwargs):
     """
@@ -13,7 +13,7 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
     invoice_status_value = "paid" if instance.status == "active" else "unpaid"
     if created:
         # Generate a unique invoice ID
-        invoice_id = f"INV-{instance.id:05d}"
+        invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
 
         # Create the invoice
         invoice = InvoiceModel.objects.create(

@@ -21,11 +21,16 @@ class OnlyEmployeeCanPost(permissions.BasePermission):
 
 
 # Create your views here.
+from rest_framework import filters
 
 class InvoiceRequestFromEmployeeView(viewsets.ModelViewSet):
     queryset=InvoiceRequestFromEmployee.objects.select_related('vendor')
     serializer_class=InvoiceRequestFromEmployeeSerializer
     # permission_classes=[OnlyEmployeeCanPost()]
+    filter_backends=[filters.SearchFilter,filters.OrderingFilter]
+    filterset_fields=['expense_date','vendor__name','vendor__email','vendor__employee_profile__department','expense_category__name']
+
+    search_fields=['vendor_name','vendor__email','vendor__employee_profile__department','discription','expense_category__name','status','amount']
 
     def get_permissions(self):
         user=self.request.user
