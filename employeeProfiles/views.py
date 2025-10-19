@@ -101,6 +101,7 @@ class EmployeeOverviewViewset(APIView):
         return Response(overview)
 
 
+
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -111,6 +112,15 @@ from assign_task_employee.models import SpecialServicesModel
 
 
 
+
+#osman provided the view below
+
+from locations.models import CustomUser, Region, Building, Apartment
+from assign_task_employee.models import SpecialServicesModel
+from plan.models import Subscription
+ 
+ 
+ 
 class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
     """
     Returns regions -> buildings -> apartments
@@ -120,6 +130,7 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
     Includes the status of subscription/service.
     """
     permission_classes = [IsAdminUser]
+
 
     def list(self, request):
         data = {}
@@ -141,6 +152,27 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
             for building in buildings:
                 apartments_list = []
 
+ 
+    def list(self, request):
+        data = {}
+ 
+        # Filter active subscriptions and relevant services
+        active_subscriptions = Subscription.objects.filter(status='active')
+        active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
+ 
+        # Get regions involved in either active subscriptions or services
+        region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
+                     set(active_services.values_list('region_id', flat=True))
+ 
+        regions = Region.objects.filter(id__in=region_ids)
+ 
+        for region in regions:
+            region_dict = {}
+            buildings = Building.objects.filter(region=region)
+ 
+            for building in buildings:
+                apartments_list = []
+ 
                 # 1️⃣ Apartments with active subscriptions
                 sub_apartments = Apartment.objects.filter(
                     subscription__in=active_subscriptions.filter(building=building)
@@ -176,6 +208,7 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
                     if apt["apartment_number"] not in seen:
                         unique_apartments.append(apt)
                         seen.add(apt["apartment_number"])
+
                 
                 
                 if unique_apartments:
@@ -189,3 +222,9 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
                     data[region.name] = region_dict
 
         return Response(data)
+
+ 
+          
+ 
+ 
+ 

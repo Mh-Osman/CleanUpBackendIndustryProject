@@ -1,5 +1,6 @@
 from django.urls import path,include
 from .views import EmployeeRegionBuildingApartmentView, EmployeeViewSet, EmpployeeSalaryViewSet,EmployeeOverviewViewset,EmployeeRegionBuildingApartmentView
+from .views import EmployeeViewSet, EmpployeeSalaryViewSet,EmployeeOverviewViewset,EmployeeRegionBuildingApartmentView
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'employees', EmployeeViewSet, basename='employee')

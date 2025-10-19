@@ -54,10 +54,22 @@ class DashBoardTopView(APIView):
             "paused":Subscription.objects.filter(
                paused_at__month=month,
                paused_at__year=year
-            ).count()
+            ).count(),
+            "new_active":new_subscription
             
          }
+         top_clients = list(
+                 InvoiceModel.objects.filter(
+                    created_at__month=month,
+                    created_at__year=year,
+                    type='outgoing'
+                )
+                .values('client__id', 'client__name', 'client__email')
+                .annotate(total_sales=Sum('total_amount'))
+                .order_by('-total_sales')[:10]
+            )
 
+         
          outgoing_sales = InvoiceModel.objects.filter(
                 created_at__month=month,
                 created_at__year=year,
@@ -74,6 +86,7 @@ class DashBoardTopView(APIView):
                 created_time = sale['created_at']
                 formatted_sales.append({
                     "time": created_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    'soudi_hour': created_time.strftime("%I:%M %p"),
                     "amount": float(sale['total_amount']),
                     "month": calendar.month_name[created_time.month]
                 })
@@ -82,6 +95,8 @@ class DashBoardTopView(APIView):
             .filter(timestamp__year=year, timestamp__month=month)
             .order_by("-timestamp")[:10]
         )
+         
+
          logs_serializer = HistoryTrackSerializer(recent_logs, many=True)
          
          return Response(
@@ -93,6 +108,7 @@ class DashBoardTopView(APIView):
                'outgoing_sales': formatted_sales,
                'analitycs':analitycs,
                'recent_activity':logs_serializer.data,
+               'top_clients':top_clients
                
 
             }

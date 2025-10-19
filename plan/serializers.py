@@ -73,14 +73,16 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             "region",
             "status",
             "start_date",
-            
+           
             "current_period_end",
             "pause_until",
             "payment", #salah uddin 
             "employee" #salah uddin 
             # "service",
+            # "supervisor",
         ]
         read_only_fields = ["created_at", "updated_at"]
+        
 
     def validate(self, attrs):
       user = attrs.get('user')
@@ -133,10 +135,12 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
     region=RegionSerializer(read_only=True)
     remaining_days=serializers.SerializerMethodField(read_only=True)
     
+    
     class Meta:
         model=Subscription
-        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee','canceled_at','paused_at']
-        read_only_fields=['canceled_at','paused_at']
+        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee','canceled_at','paused_at','start_date','current_period_end','created_at','updated_at']
+        read_only_fields=['canceled_at','paused_at','created_at','updated_at']
+        
     def get_remaining_days(self, obj):
         if obj.current_period_end:
             delta = obj.current_period_end- datetime.now().date()

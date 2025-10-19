@@ -87,7 +87,6 @@ class Subscription(models.Model):
     # stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
     # stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
-    start_date = models.DateField(null=True, blank=True)
    
     current_period_end = models.DateField(null=True, blank=True)
     pause_until = models.DateTimeField(null=True, blank=True)  # for paused subscriptions
@@ -97,6 +96,10 @@ class Subscription(models.Model):
     # past_due_date=models.DateTimeField(auto_now_add=True,null=True,blank=True)
     canceled_at=models.DateTimeField(null=True,blank=True)
     paused_at=models.DateTimeField(null=True,blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    #salah uddin 
+    # supervisor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='supervised_subscriptions')
+   
 
 
 
@@ -152,6 +155,8 @@ class InvoiceModel(models.Model):
     created_at=models.DateTimeField(blank=True,null=True,auto_now_add=True)
     updated_at=models.DateTimeField(blank=True,null=True,auto_now=True)
     sub_total=models.FloatField(default=0,blank=True,null=True)
+
+    
     @property
     def calculated_total(self):
         return sum(item.total for item in self.line_items.all())
