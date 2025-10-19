@@ -3,6 +3,7 @@ from django.conf import settings
 
 from django.core.mail import send_mail
 from django.conf import settings
+
 from smtplib import SMTPRecipientsRefused
 from django.core.mail import BadHeaderError
 def send_otp_email(email, code):
@@ -10,6 +11,7 @@ def send_otp_email(email, code):
     message = f'Your OTP code is: {code}'
     from_email = settings.DEFAULT_FROM_EMAIL
     recipient_list = [email]
+
     print("Sending email...",{message})
     
     try:
@@ -19,5 +21,8 @@ def send_otp_email(email, code):
     except BadHeaderError:
         print("⚠️ Invalid header found.")
     except Exception as e:
+
+        print(f"⚠️ Unexpected email sending error: {e}")
+
         print(f"⚠️ Unexpected email sending error: {e}")
  
