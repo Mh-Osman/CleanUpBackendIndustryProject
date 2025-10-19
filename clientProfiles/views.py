@@ -18,7 +18,7 @@ class ClientProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ClientSerializer
   #  permission_classes = [permissions.IsAuthenticated]
     permission_classes = [permissions.AllowAny]
-
+    filter_backends=[DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['name', 'email', 'prime_phone']
     search_fields = ['name', 'email', 'prime_phone']
 

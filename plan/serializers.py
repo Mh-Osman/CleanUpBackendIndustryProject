@@ -73,7 +73,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             "region",
             "status",
             "start_date",
-           
             "current_period_end",
             "pause_until",
             "payment", #salah uddin 

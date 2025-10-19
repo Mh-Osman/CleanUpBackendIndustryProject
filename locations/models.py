@@ -58,7 +58,7 @@ class Apartment(models.Model):
     living_rooms = models.IntegerField()
     bathrooms = models.IntegerField()
     outdoor_area = models.BooleanField(default=False)
-    postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
+    postcode = models.CharField(max_length=5, blank=True,null=True)
     location = models.CharField(max_length=255)
 
     # class Meta:
