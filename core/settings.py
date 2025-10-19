@@ -186,12 +186,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# PostgreSQL settings
-POSTGRES_DB="myprojectdb"
-POSTGRES_USER="myuser"
-POSTGRES_PASSWORD="K9w@rZ7#b!gT1qNp"
-POSTGRES_HOST="db"
-POSTGRES_PORT="5432"
+
 
 
 DATABASES = {
