@@ -40,8 +40,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 REST_FRAMEWORK = {
     
     'DEFAULT_AUTHENTICATION_CLASSES': (
-       # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-       'users.authentication.CookieJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+      # 'users.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -169,9 +169,13 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:6868",
     "http://10.10.13.86:6868",
 ]
+
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    
     "http://10.10.13.86:6868",
 ]
 CSRF_COOKIE_SECURE = False

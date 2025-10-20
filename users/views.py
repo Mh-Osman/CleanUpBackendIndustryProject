@@ -67,6 +67,7 @@ class ResendOTPAPIView(APIView):
             return Response({"error":"User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 # ✅ Login
+from django.middleware import csrf
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]
 
@@ -81,35 +82,39 @@ class LoginAPIView(APIView):
             refresh = RefreshToken.for_user(user)
             user.last_login = timezone.now()
             user.save()
-            # return Response({
-            #     "refresh": str(refresh),
-            #     "access": str(refresh.access_token),
-            #     "user": UserSerializer(user).data
-            # }, status=status.HTTP_200_OK)
-            #refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            response = Response({"message": "Login successful" , 
-                                 'user': UserSerializer(user).data,
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+            # refresh = RefreshToken.for_user(user)
+            # access_token = str(refresh.access_token)
+            # response = Response({"message": "Login successful" , 
+            #                      'user': UserSerializer(user).data,
                                  
                                  
-                                 })
-            response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-           #secure=True,
-            samesite="None",
-            domain= None,
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=str(refresh),
-                httponly=True,
-              # secure=True,
-                samesite="None",
-                domain= None,
-            )
-            return response
+            #                      })
+            # response.set_cookie(
+            #  key="access_token",
+            # value=str(refresh.access_token),
+            # httponly=True,
+            # samesite='None',
+            # secure=True,
+            # max_age=5 * 60,  # 5 minutes
+            # )
+            # response.set_cookie(
+            #      key="refresh_token",
+            # value=str(refresh),
+            # httponly=True,
+            # samesite='Lax',
+            # secure=True,
+            # max_age=7 * 24 * 60 * 60,  # 7 days
+            # )
+
+            # csrf_token = csrf.get_token(request)
+            # response.set_cookie("csrftoken", csrf_token)
+            # response.data = {"message": "Login successful", "csrfToken": csrf_token}
+            #return response
             
         
         return Response({"error":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)

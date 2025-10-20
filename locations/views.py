@@ -93,59 +93,107 @@ class RegionDetailViewSet(viewsets.ReadOnlyModelViewSet):
 
 from django.db.models import Q
 from .serializers import EmployeeInMapSerializer
-class EmployeeinMapViewset(viewsets.ViewSet):
+# class EmployeeinMapViewset(viewsets.ViewSet):
+#     permission_classes = [IsAuthenticated]
+
+#     def list(self, request):
+#         user = request.user
+
+#         # Get region IDs from Subscription
+#         subscription_region_ids = Subscription.objects.filter(
+#             employee=user
+#         ).values_list('apartment__building__region__id', flat=True)
+
+#         # Get region IDs from SpecialServicesModel
+#         special_service_region_ids = SpecialServicesModel.objects.filter(
+#             worker=user
+#         ).values_list('apartment__building__region__id', flat=True)
+
+#         # Combine IDs and remove duplicates
+#         region_ids = set(list(subscription_region_ids) + list(special_service_region_ids))
+
+#         # Base queryset
+#         regions = Region.objects.prefetch_related('buildings').filter(id__in=region_ids)
+
+#         # Apply search if query parameter exists
+#         search_query = request.GET.get('search', None)
+#         if search_query:
+#             regions = regions.filter(
+#                 Q(name__icontains=search_query) |  # region name
+#                 Q(buildings__name__icontains=search_query) |  # building name
+#                 Q(buildings__location__icontains=search_query)  # building location
+#             ).distinct()  # distinct to avoid duplicates due to joins
+
+#         serializer = EmployeeInMapSerializer(regions, many=True, context={'user': user})
+#         return Response(serializer.data)
+
+
+# class EmployeeinMapViewset1(viewsets.ViewSet):
+#     permission_classes = [IsAuthenticated]
+#    # permission_classes = [AllowAny]
+
+#     def list(self, request):
+#         user = request.user
+#         subscription_region_ids = Subscription.objects.filter(
+#             employee=user
+#         ).values_list('apartment', flat=True)
+
+#         special_service_region_ids = SpecialServicesModel.objects.filter(
+#             worker=user
+#         ).values_list('apartment', flat=True)
+
+#         apartment_ids = set(list(subscription_region_ids) + list(special_service_region_ids))
+
+#         apartments = Apartment.objects.select_related('building__region').filter(id__in=apartment_ids)
+
+#         serializer = EmployeeInMapSerializer1(apartments, many=True, context={'user': user})
+#         return Response(serializer.data)
+
+
+
+class EmployeeInMapViewset(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
         user = request.user
 
-        # Get region IDs from Subscription
-        subscription_region_ids = Subscription.objects.filter(
-            employee=user
-        ).values_list('apartment__building__region__id', flat=True)
+        # Get query params for search and filtering
+        search = request.query_params.get('search', None)  # general search
+       # city_filter = request.query_params.get('city', None)
+        type_filter = request.query_params.get('type', None)
+        region_filter = request.query_params.get('region', None)
 
-        # Get region IDs from SpecialServicesModel
-        special_service_region_ids = SpecialServicesModel.objects.filter(
-            worker=user
-        ).values_list('apartment__building__region__id', flat=True)
+        # Get buildings related to user subscriptions and special services
+        building_ids = set(
+            Subscription.objects.filter(employee=user, status='active')
+            .values_list('building', flat=True)
+        ) | set(
+            SpecialServicesModel.objects.filter(worker=user, status__in=['pending', 'started'])
+            .values_list('building', flat=True)
+        )
 
-        # Combine IDs and remove duplicates
-        region_ids = set(list(subscription_region_ids) + list(special_service_region_ids))
+        buildings = Building.objects.filter(id__in=building_ids)
 
-        # Base queryset
-        regions = Region.objects.prefetch_related('buildings').filter(id__in=region_ids)
+        # Apply general search
+        if search:
+            buildings = buildings.filter(
+                Q(name__icontains=search) |
+               # Q(city__icontains=search) |
+                Q(location__icontains=search) |
+                Q(region__name__icontains=search)
+            )
 
-        # Apply search if query parameter exists
-        search_query = request.GET.get('search', None)
-        if search_query:
-            regions = regions.filter(
-                Q(name__icontains=search_query) |  # region name
-                Q(buildings__name__icontains=search_query) |  # building name
-                Q(buildings__location__icontains=search_query)  # building location
-            ).distinct()  # distinct to avoid duplicates due to joins
+        # Apply individual filters
+        # if city_filter:
+        #     buildings = buildings.filter(city__iexact=city_filter)
+        if type_filter:
+            buildings = buildings.filter(type__iexact=type_filter)
+        if region_filter:
+            buildings = buildings.filter(region__name__iexact=region_filter)
 
-        serializer = EmployeeInMapSerializer(regions, many=True, context={'user': user})
+        # Prefetch apartments and region to reduce queries
+        buildings = buildings.select_related('region').prefetch_related('apartments')
+
+        serializer = EmployeeInMapSerializer(buildings, many=True, context={'user': user})
         return Response(serializer.data)
 
-
-class EmployeeinMapViewset1(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-   # permission_classes = [AllowAny]
-
-    def list(self, request):
-        user = request.user
-        subscription_region_ids = Subscription.objects.filter(
-            employee=user
-        ).values_list('apartment', flat=True)
-
-        special_service_region_ids = SpecialServicesModel.objects.filter(
-            worker=user
-        ).values_list('apartment', flat=True)
-
-        apartment_ids = set(list(subscription_region_ids) + list(special_service_region_ids))
-
-        apartments = Apartment.objects.select_related('building__region').filter(id__in=apartment_ids)
-
-        serializer = EmployeeInMapSerializer1(apartments, many=True, context={'user': user})
-        return Response(serializer.data)
-        

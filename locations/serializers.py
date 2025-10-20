@@ -207,18 +207,28 @@ class RegionDetailSerializer(serializers.ModelSerializer):
 #         read_only_fields = "__all__"
 
 
+# class EmployeeInMapSerializer(serializers.ModelSerializer):
+#     buildings = BuildingSerializer(many=True, read_only=True)
+    
+#     class Meta:
+#         model = Region
+#         fields  =["id" , "name" ,"buildings" ]
+#         read_only_fields = ['id']
+# class EmployeeInMapSerializer1(serializers.ModelSerializer):
+#     Buildings = BuildingSerializer(many=True, read_only=True)
+#     region = RegionSerializer(source='building.region', read_only=True)
+    
+#     class Meta:
+#         model = Apartment
+#         fields = "__all__"
+#         read_only_fields = ['id']
+
+
 class EmployeeInMapSerializer(serializers.ModelSerializer):
-    buildings = BuildingSerializer(many=True, read_only=True)
     
+    apartments = ApartmentSerializerForBuilding(many=True, read_only=True)
+    region = RegionSerializer(read_only=True) 
     class Meta:
-        model = Region
-        fields  =["id" , "name" ,"buildings" ]
-        read_only_fields = ['id']
-class EmployeeInMapSerializer1(serializers.ModelSerializer):
-    Buildings = BuildingSerializer(many=True, read_only=True)
-    region = RegionSerializer(source='building.region', read_only=True)
-    
-    class Meta:
-        model = Apartment
-        fields = "__all__"
+        model = Building
+        fields = ["id", "name", "type", "city", "location", "latitude", "longitude", "region", "apartments"]
         read_only_fields = ['id']
