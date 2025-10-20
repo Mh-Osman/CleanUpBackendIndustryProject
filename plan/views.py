@@ -82,7 +82,7 @@ class SubscriptionSerializerView(generics.ListAPIView):
     queryset=Subscription.objects.all().order_by("-created_at")
     serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
-    filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
+    filterset_fields = ['id','status','plan', 'user', 'building', 'region', 'apartment']
     search_fields = ['status','plan__plan_code','plan__name','building__name','region__name','user__email']
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -91,6 +91,12 @@ class SubscriptionSerializerView(generics.ListAPIView):
              ).distinct()
 
         return self.queryset
+    def paginate_queryset(self, queryset):
+        
+        if self.request.user.user_type == 'client':
+            return None
+        
+        return super().paginate_queryset(queryset)
     
 
 # full subscription view

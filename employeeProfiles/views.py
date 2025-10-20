@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer,EmployOverView 
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser,IsAuthenticated,SAFE_METHODS,BasePermission
 from rest_framework.views import APIView
 from invoice_request_from_client.models import InvoiceRequestFromEmployee
 from django.db.models import Sum,Q
@@ -17,15 +17,28 @@ from django.db.models import Sum,Q
 from plan.models import Subscription
 from assign_task_employee.models import SpecialServicesModel
 
+class CustomEmployeePermission(BasePermission):
+    """
+    Allow employees to view only their own profiles.
+    """
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(user_type='employee')
-
+    queryset = CustomUser.objects.all()
     serializer_class = EmployeeWithProfileSerializer
-    permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['name', 'email', 'employee_profile__department', 'employee_profile__role']
+    filterset_fields = ['id','name', 'email', 'employee_profile__department', 'employee_profile__role']
     search_fields = ['name', 'email', 'employee_profile__national_id', 'employee_profile__contact_number']
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [IsAuthenticated()]
+        elif self.request.method in ['PUT', 'PATCH']:
+            return [CustomEmployeePermission()]
+        else:
+            return [IsAdminUser()]
+        
 
 class EmpployeeSalaryViewSet(viewsets.ModelViewSet):
     queryset = EmployeeSalary.objects.all()
