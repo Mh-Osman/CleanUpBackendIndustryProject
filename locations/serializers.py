@@ -198,3 +198,27 @@ class RegionDetailSerializer(serializers.ModelSerializer):
 
     def get_total_apartments(self, obj):
         return Apartment.objects.filter(building__region=obj).count()
+
+
+# class EmployeeInMapApartmentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Apartment
+#         fields = ['id', 'apartment_number', 'building', 'client', 'building_location']
+#         read_only_fields = "__all__"
+
+
+class EmployeeInMapSerializer(serializers.ModelSerializer):
+    buildings = BuildingSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Region
+        fields  =["id" , "name" ,"buildings" ]
+        read_only_fields = ['id']
+class EmployeeInMapSerializer1(serializers.ModelSerializer):
+    Buildings = BuildingSerializer(many=True, read_only=True)
+    region = RegionSerializer(source='building.region', read_only=True)
+    
+    class Meta:
+        model = Apartment
+        fields = "__all__"
+        read_only_fields = ['id']

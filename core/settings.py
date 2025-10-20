@@ -40,7 +40,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 REST_FRAMEWORK = {
     
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+       # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+       'users.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -63,7 +64,23 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=480),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+
 }
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -73,6 +90,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt',
@@ -87,7 +105,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     # <<<<<<< gani
     'google_map',
-    'corsheaders',
+    
     "auditlog",
     'all_history',
 # <<<<<<< HEAD
@@ -118,21 +136,7 @@ CELERY_TIMEZONE = 'Asia/Dhaka'
 
 
 
-CORS_ALLOW_ALL_ORIGINS = True
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    "auditlog.middleware.AuditlogMiddleware",
-    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
-]
 
 INTERNAL_IPS = [ #osman
 
@@ -148,21 +152,33 @@ ALLOWED_HOSTS = [
     "127.0.0.1:6868",
     "127.0.0.1:4041",
     "10.10.13.61",
-    "10.10.13.75"
-
+    "10.10.13.75",
+    "10.10.13.86",
 ]
+
+
 CSRF_TRUSTED_ORIGINS = [
     "https://398bac921dd6.ngrok-free.app",
+    
    
 ]
-
 
 CSRF_TRUSTED_ORIGINS = [
    
     "https://*.ngrok-free.app",
-    "http://127.0.0.1:6868"
+    "http://127.0.0.1:6868",
+    "http://10.10.13.86:6868",
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://10.10.13.86:6868",
+]
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+# CORS_ALLOW_CREDENTIALS = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [

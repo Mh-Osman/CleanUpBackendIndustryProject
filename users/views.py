@@ -81,12 +81,38 @@ class LoginAPIView(APIView):
             refresh = RefreshToken.for_user(user)
             user.last_login = timezone.now()
             user.save()
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": UserSerializer(user).data
-            }, status=status.HTTP_200_OK)
-        return Response({"error":"Invalid User"})
+            # return Response({
+            #     "refresh": str(refresh),
+            #     "access": str(refresh.access_token),
+            #     "user": UserSerializer(user).data
+            # }, status=status.HTTP_200_OK)
+            #refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            response = Response({"message": "Login successful" , 
+                                 'user': UserSerializer(user).data,
+                                 
+                                 
+                                 })
+            response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+           #secure=True,
+            samesite="None",
+            domain= None,
+            )
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+              # secure=True,
+                samesite="None",
+                domain= None,
+            )
+            return response
+            
+        
+        return Response({"error":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # ✅ Forget Password
 class ForgetPasswordAPIView(APIView):

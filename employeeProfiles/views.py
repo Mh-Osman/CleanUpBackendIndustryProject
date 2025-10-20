@@ -5,7 +5,7 @@ from rest_framework import status, decorators, response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer,EmployOverView
+from .serializers import EmployeeWithProfileSerializer , EmployeeSalarySerializer,EmployOverView 
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from invoice_request_from_client.models import InvoiceRequestFromEmployee
@@ -120,7 +120,7 @@ from assign_task_employee.models import SpecialServicesModel
 from plan.models import Subscription
  
  
- 
+from rest_framework.permissions import IsAuthenticated
 class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
     """
     Returns regions -> buildings -> apartments
@@ -129,28 +129,9 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
         - Services with status 'pending' or 'started'
     Includes the status of subscription/service.
     """
-    permission_classes = [IsAdminUser]
+   
+    permission_classes = [IsAuthenticated]
 
-
-    def list(self, request):
-        data = {}
-
-        # Filter active subscriptions and relevant services
-        active_subscriptions = Subscription.objects.filter(status='active')
-        active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
-
-        # Get regions involved in either active subscriptions or services
-        region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
-                     set(active_services.values_list('region_id', flat=True))
-
-        regions = Region.objects.filter(id__in=region_ids)
-
-        for region in regions:
-            region_dict = {}
-            buildings = Building.objects.filter(region=region)
-
-            for building in buildings:
-                apartments_list = []
 
  
     def list(self, request):
@@ -224,7 +205,7 @@ class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
         return Response(data)
 
  
-          
- 
- 
- 
+
+
+
+  
