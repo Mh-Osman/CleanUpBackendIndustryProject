@@ -35,7 +35,7 @@ class Building(models.Model):
         ("residential", "Residential"),
         ("commercial", "Commercial"),
     ]
-
+    
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=BUILDING_TYPES)
     city = models.CharField(max_length=100)
@@ -58,7 +58,7 @@ class Apartment(models.Model):
     living_rooms = models.IntegerField()
     bathrooms = models.IntegerField()
     outdoor_area = models.BooleanField(default=False)
-    postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
+    postcode = models.CharField(max_length=5, blank=True,null=True)
     location = models.CharField(max_length=255)
 
     # class Meta:

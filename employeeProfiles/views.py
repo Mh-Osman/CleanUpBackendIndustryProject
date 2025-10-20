@@ -102,110 +102,136 @@ class EmployeeOverviewViewset(APIView):
 
 
 
-from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from django.db.models import Q, Prefetch
+# from rest_framework import viewsets
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAdminUser
+# from django.db.models import Q, Prefetch
 
-from locations.models import CustomUser, Region, Building, Apartment
-from assign_task_employee.models import SpecialServicesModel
-
-
+# from locations.models import CustomUser, Region, Building, Apartment
+# from assign_task_employee.models import SpecialServicesModel
 
 
-#osman provided the view below
 
-from locations.models import CustomUser, Region, Building, Apartment
-from assign_task_employee.models import SpecialServicesModel
-from plan.models import Subscription
+
+# #osman provided the view below
+
+# from locations.models import CustomUser, Region, Building, Apartment
+# from assign_task_employee.models import SpecialServicesModel
+# from plan.models import Subscription
  
  
-from rest_framework.permissions import IsAuthenticated
-class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
-    """
-    Returns regions -> buildings -> apartments
-    for employees with:
-        - Active subscriptions
-        - Services with status 'pending' or 'started'
-    Includes the status of subscription/service.
-    """
+# from rest_framework.permissions import IsAuthenticated
+# class EmployeeRegionBuildingApartmentView(viewsets.ViewSet):
+#     """
+#     Returns regions -> buildings -> apartments
+#     for employees with:
+#         - Active subscriptions
+#         - Services with status 'pending' or 'started'
+#     Includes the status of subscription/service.
+#     """
+# <<<<<<< HEAD
    
-    permission_classes = [IsAuthenticated]
+#     permission_classes = [IsAuthenticated]
+# =======
+#     #permission_classes = [IsAdminUser]
+# >>>>>>> origin/main
 
+#     permission_classes = [IsAuthenticated]
+    
 
+# <<<<<<< HEAD
  
-    def list(self, request):
-        data = {}
+#     def list(self, request):
+#         data = {}
  
-        # Filter active subscriptions and relevant services
-        active_subscriptions = Subscription.objects.filter(status='active')
-        active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
+#         # Filter active subscriptions and relevant services
+#         active_subscriptions = Subscription.objects.filter(status='active')
+#         active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
  
-        # Get regions involved in either active subscriptions or services
-        region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
-                     set(active_services.values_list('region_id', flat=True))
+#         # Get regions involved in either active subscriptions or services
+#         region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
+#                      set(active_services.values_list('region_id', flat=True))
  
-        regions = Region.objects.filter(id__in=region_ids)
+#         regions = Region.objects.filter(id__in=region_ids)
  
-        for region in regions:
-            region_dict = {}
-            buildings = Building.objects.filter(region=region)
+#         for region in regions:
+#             region_dict = {}
+#             buildings = Building.objects.filter(region=region)
  
-            for building in buildings:
-                apartments_list = []
+#             for building in buildings:
+#                 apartments_list = []
  
-                # 1️⃣ Apartments with active subscriptions
-                sub_apartments = Apartment.objects.filter(
-                    subscription__in=active_subscriptions.filter(building=building)
-                ).distinct()
+# =======
+#     def list(self, request):
+#         data = {}
 
-                for apt in sub_apartments:
-                    apartments_list.append({
-                        "apartment_number": apt.apartment_number,
-                        "status": "active",  # from subscription
-                    })
+#         # Filter active subscriptions and relevant services
+#         active_subscriptions = Subscription.objects.filter(status='active')
+#         active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
 
-                # 2️⃣ Apartments with pending/started services
-                service_apartments = Apartment.objects.filter(
-                    special_services_apartments__in=active_services.filter(building=building)
-                ).distinct()
+#         # Get regions involved in either active subscriptions or services
+#         region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
+#                     set(active_services.values_list('region_id', flat=True))
 
-                for apt in service_apartments:
-                    # Find the first matching service for status
-                    matching_service = active_services.filter(
-                        building=building,
-                        apartment__in=[apt]
-                    ).first()
-                    if matching_service:
-                        apartments_list.append({
-                            "apartment_number": apt.apartment_number,
-                            "status": matching_service.status,
-                        })
+#         regions = Region.objects.filter(id__in=region_ids)
 
-                # Deduplicate apartments (if same apartment appears in both subscription & service)
-                seen = set()
-                unique_apartments = []
-                for apt in apartments_list:
-                    if apt["apartment_number"] not in seen:
-                        unique_apartments.append(apt)
-                        seen.add(apt["apartment_number"])
+#         for region in regions:
+#             region_dict = {
+#                 "region_name": region.name,
+#                 "buildings": {}
+#             }
 
-                
-                
-                if unique_apartments:
-                    # Include building address along with apartments
-                    region_dict[building.name] = {
-                        "address": building.location,
-                        "apartments": unique_apartments
-                    }
+#             buildings = Building.objects.filter(region=region)
 
-                if region_dict:
-                    data[region.name] = region_dict
+#             for building in buildings:
+#                 apartments_list = []
 
-        return Response(data)
+# >>>>>>> origin/main
+#                 # 1️⃣ Apartments with active subscriptions
+#                 sub_apartments = Apartment.objects.filter(
+#                     subscription__in=active_subscriptions.filter(building=building)
+#                 ).distinct()
+#                 for apt in sub_apartments:
+#                     apartments_list.append({
+#                         "apartment_number": apt.apartment_number,
+#                         "status": "active",
+#                     })
 
- 
+#                 # 2️⃣ Apartments with pending/started services
+#                 service_apartments = Apartment.objects.filter(
+#                     special_services_apartments__in=active_services.filter(building=building)
+#                 ).distinct()
+#                 for apt in service_apartments:
+#                     matching_service = active_services.filter(building=building, apartment__in=[apt]).first()
+#                     if matching_service:
+#                         apartments_list.append({
+#                             "apartment_number": apt.apartment_number,
+#                             "status": matching_service.status,
+#                         })
+
+#                 # Deduplicate apartments
+#                 seen = set()
+#                 unique_apartments = []
+#                 for apt in apartments_list:
+#                     if apt["apartment_number"] not in seen:
+#                         unique_apartments.append(apt)
+#                         seen.add(apt["apartment_number"])
+
+#                 if unique_apartments:
+#                     region_dict["buildings"][building.id] = {
+#                         "building_name": building.name,
+#                         "address": building.location,
+#                         "building_type": building.type,
+#                         "city": building.city,
+#                         "region_id": building.region.id,
+#                         "latitude": str(building.latitude),
+#                         "longitude": str(building.longitude),
+#                         "apartments": unique_apartments,
+#                     }
+
+#             if region_dict["buildings"]:
+#                 data[region.id] = region_dict
+
+#         return Response(data)
 
 
-
-  

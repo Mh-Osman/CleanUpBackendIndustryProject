@@ -17,6 +17,7 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-yasg==1.21.11
 geopandas==1.1.1
+gunicorn==23.0.0
 idna==3.10
 inflection==0.5.1
 kombu==5.5.4

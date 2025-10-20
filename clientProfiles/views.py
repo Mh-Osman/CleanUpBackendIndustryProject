@@ -18,7 +18,7 @@ class ClientProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ClientSerializer
   #  permission_classes = [permissions.IsAuthenticated]
     permission_classes = [permissions.AllowAny]
-
+    filter_backends=[DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['name', 'email', 'prime_phone']
     search_fields = ['name', 'email', 'prime_phone']
 
@@ -35,8 +35,8 @@ class ClientViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.select_related('client_profile').filter(user_type='client')
     
     serializer_class = ClientSerializer
-   # permission_classes = [permissions.IsAuthenticated]
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+  #  permission_classes = [permissions.AllowAny]
     filterset_fields = ['name', 'email', 'prime_phone']
     search_fields = ['name', 'email', 'prime_phone']
 from rest_framework.decorators import api_view, permission_classes
