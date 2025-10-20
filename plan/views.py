@@ -83,12 +83,13 @@ class SubscriptionSerializerView(generics.ListAPIView):
     serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
-    search_fields = ['status','plan__plan_code','plan__name','building__name','region__name']
+    search_fields = ['status','plan__plan_code','plan__name','building__name','region__name','user__email']
     def get_queryset(self):
         if not self.request.user.is_staff:
-            return self.queryset.filter(
-                Q(user=self.request.user) | Q(employee=self.request.user)
-            )
+           return self.queryset.filter(
+               Q(user=self.request.user) | Q(employee__in=[self.request.user])
+             ).distinct()
+
         return self.queryset
     
 

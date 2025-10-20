@@ -35,7 +35,7 @@ class Building(models.Model):
         ("residential", "Residential"),
         ("commercial", "Commercial"),
     ]
-
+    
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=BUILDING_TYPES)
     city = models.CharField(max_length=100)

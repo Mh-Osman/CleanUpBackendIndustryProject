@@ -15,8 +15,12 @@ User = get_user_model()
 class SpecialServicesModelSerializer(serializers.ModelSerializer):
     # category=CategorySerializer(many=True)
     # building=BuildingSerializer(read_only=True)
+    building_name=serializers.CharField(source='building.name',read_only=True)
+    region_name=serializers.CharField(source='building.region.name',read_only=True)
     active=serializers.SerializerMethodField(read_only=True)
-    total_revenue=serializers.SerializerMethodField(read_only=True)
+    aprtment_number=serializers.SerializerMethodField(read_only=True)
+    client_name=serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = SpecialServicesModel
         fields = [
@@ -38,11 +42,17 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
             "status",
             "apartment",
             # "package",
-            'total_revenue',
+            # 'total_revenue',
             'active',
             'service_code',
             'region',
             'discounted_price',
+            "building_name",
+            "region_name",
+            "active",
+            "client_name",
+            "aprtment_number",
+            "created_at",
         ]
         read_only_fields = ["created_at", "updated_at","id","discounted_price"]
 
@@ -53,6 +63,11 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
             total_amount=Sum('discounted_price')
         )['total_amount']
         return total or 0
+    
+    def get_aprtment_number(self, obj):
+        return [apartment.apartment_number for apartment in obj.apartment.all()]
+    def get_client_name(self, obj):
+        return [apartment.client.name if apartment.client else "unknown" for apartment in obj.apartment.all()]
     
    
     
