@@ -24,7 +24,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeeWithProfileSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['name', 'email', 'employee_profile__department', 'employee_profile__role']
+    filterset_fields = ['name', 'email', 'employee_profile__department', 'employee_profile__role','employee_profile__is_on_leave']
     search_fields = ['name', 'email', 'employee_profile__national_id', 'employee_profile__contact_number']
 
 class EmpployeeSalaryViewSet(viewsets.ModelViewSet):

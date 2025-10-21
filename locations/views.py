@@ -40,8 +40,8 @@ class ApartmentViewSet(viewsets.ModelViewSet):
     serializer_class = ApartmentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['apartment_number', 'building__name', 'client__name']
-    search_fields = ['apartment_number', 'building__name', 'client__name']
+    filterset_fields = ['apartment_number', 'building__name', 'client__name', 'client_id' , "building_id"]
+    search_fields = ['apartment_number', 'building__name', 'client__name',]
     ordering_fields = ['apartment_number', 'building__name', 'client__name']
 
 @api_view(['GET'])
