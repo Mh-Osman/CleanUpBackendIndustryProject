@@ -71,6 +71,7 @@ CORS_ALLOW_CREDENTIALS = True
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  #
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -111,7 +112,10 @@ INSTALLED_APPS = [
 # <<<<<<< HEAD
     'debug_toolbar', #osman
     #'subscriptions', #osman
- 
+
+    'channels',
+    'chat',
+# =======
     
      
 
@@ -200,8 +204,18 @@ TEMPLATES = [
     },
 ]
 
+#
+ASGI_APPLICATION = 'core.asgi.application'
 WSGI_APPLICATION = 'core.wsgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(config('REDIS_HOST', default='127.0.0.1'), config('REDIS_PORT', default=6380))],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
