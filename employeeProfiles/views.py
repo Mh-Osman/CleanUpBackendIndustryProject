@@ -19,7 +19,7 @@ from assign_task_employee.models import SpecialServicesModel
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(user_type='employee')
+    queryset = CustomUser.objects.filter(user_type__in=['employee', 'supervisor'])
 
     serializer_class = EmployeeWithProfileSerializer
     permission_classes = [IsAdminUser]

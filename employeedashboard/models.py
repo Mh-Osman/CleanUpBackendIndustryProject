@@ -24,7 +24,7 @@ choices = [
 ]
 class SupervisorFormModel(models.Model):
    title = models.CharField(max_length=100)
-   supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supervisor_forms", limit_choices_to={'user_type': 'employee'})
+   supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supervisor_forms", limit_choices_to={'user_type': 'supervisor'})
    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="employee_forms", limit_choices_to={'user_type': 'employee'})
    report_date = models.DateField(auto_now_add=True) #assign auto now_add=True for automatic date
    work_summary = models.TextField() # Summary of work 

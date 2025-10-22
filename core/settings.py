@@ -127,6 +127,8 @@ INSTALLED_APPS = [
     'rating',
 
     'employeedashboard',
+    #osman
+    'dynamicForm'
 ]
 # for use celery 
 
