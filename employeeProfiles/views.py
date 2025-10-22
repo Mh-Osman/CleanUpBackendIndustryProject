@@ -22,7 +22,7 @@ class CustomEmployeePermission(BasePermission):
     Allow employees to view only their own profiles.
     """
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        return obj == request.user
 
 class EmployeeViewSet(viewsets.ModelViewSet):
 # <<<<<<< HEAD
@@ -255,5 +255,13 @@ class EmployeeOverviewViewset(APIView):
 #                 data[region.id] = region_dict
 
 #         return Response(data)
+
+from .serializers import  SupervisorsListSerializer
+class SupervisorsListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = CustomUser.objects.filter(user_type = 'supervisor')
+    serializer_class = SupervisorsListSerializer
+    permission_classes = [IsAdminUser]
+
+
 
 

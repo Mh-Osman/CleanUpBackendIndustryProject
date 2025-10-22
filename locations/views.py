@@ -156,7 +156,8 @@ class EmployeeInMapViewset(viewsets.ViewSet):
 
     def list(self, request):
         user = request.user
-
+        #if user.user_type in ['admin', 'client']:
+            # return Response({'detail': 'You are not a valid person for this action.'}, status=403)
         # Get query params for search and filtering
         search = request.query_params.get('search', None)  # general search
        # city_filter = request.query_params.get('city', None)

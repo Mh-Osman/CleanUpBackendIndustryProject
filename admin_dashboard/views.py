@@ -1,11 +1,12 @@
 from django.shortcuts import render
+from users.models import CustomUser
 from locations.models import Building
 from plan.models import Subscription,InvoiceModel
 from django.contrib.auth  import get_user_model
 from rest_framework.views import APIView
 from datetime import datetime
 from rest_framework.response import Response
-from .serializers import  DashBoardTopSerializer
+from .serializers import  AdminUserSerializer, DashBoardTopSerializer
 from django.db.models import Sum
 from auditlog.models import LogEntry
 from all_history.serializers import HistoryTrackSerializer
@@ -114,14 +115,23 @@ class DashBoardTopView(APIView):
             }
          )
          
-         
+from .models import  AdminProfileModel      
+from .serializers import AdminProfileSerializer
+from rest_framework import viewsets
+
+from rest_framework.permissions import IsAdminUser
+class AdminProfileViewSet(viewsets.ModelViewSet):
+    queryset = AdminProfileModel.objects.all()
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminProfileSerializer
+   
+class AdminUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.filter(user_type='admin')
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminUserSerializer
 
 
-         
-         
 
-
-      
       
 
 

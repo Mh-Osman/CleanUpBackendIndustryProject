@@ -175,6 +175,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         # Auto-generate username if not provided
         if not self.username:
             self.username = CustomUserManager().generate_unique_username(self.name)
+            if self.user_type == 'admin':
+                
+                self.is_superuser = True
+                self.is_staff = True
+            else:
+                self.is_superuser = False
+                self.is_staff = False
+            
         super().save(*args, **kwargs)
 
     def __str__(self):

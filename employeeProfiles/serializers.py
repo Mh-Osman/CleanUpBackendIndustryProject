@@ -140,3 +140,11 @@ class EmployOverView(serializers.Serializer):
 
 
 
+class SupervisorsListSerializer(serializers.ModelSerializer):
+     
+     employee_profile = EmployeeProfileSerializer(required=False)
+     class Meta:
+        model = CustomUser
+        fields = ['id', 'name', 'username', 'email', 'user_type', 'prime_phone', 'last_login', 'employee_profile']
+        extra_kwargs = {'password': {'write_only': True}}
+
