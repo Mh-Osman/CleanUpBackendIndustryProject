@@ -49,6 +49,8 @@ class Message(models.Model):
     # ব্যক্তিগত চ্যাটের জন্য (optional)
     one_to_one_chat = models.ForeignKey(OneToOneChat, on_delete=models.CASCADE, null=True, blank=True)
 
+    is_pinned = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['timestamp'] # মেসেজগুলো সময় অনুযায়ী সাজানো থাকবে
 

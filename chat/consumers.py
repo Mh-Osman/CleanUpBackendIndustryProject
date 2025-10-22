@@ -652,6 +652,15 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
             await self.leave_group(content)
         elif action == "load_messages":
             await self.load_messages(content)
+        elif action == "delete_message":
+            await self.delete_message(content)
+        elif action == "edit_message":
+            await self.edit_message(content)
+        elif action == 'reply_message':
+            await self.reply_message(content)
+
+        elif action == "pin_message":
+            await self.pin_message(content)
             
         else:
             await self.send_json({"error": "Invalid action"})
@@ -793,7 +802,7 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
                 "error": f"User '{self.user.username}' is not a member of '{self.group_name}'"
             })
 
-
+     
     # ---------------------------
     # Load Messages (with pagination)
     # ---------------------------
@@ -821,8 +830,132 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
             "offset": offset,
             "messages": message_list,
         })
+    
+    # ---------------------------
+    # Delete Message
+    # ---------------------------
+    async def delete_message(self, content):
+        message_id = content.get("message_id")
+        if not message_id:
+            await self.send_json({"error": "message_id is required"})
+            return
 
+        @database_sync_to_async
+        def delete_message_from_db():
+            try:
+                message = Message.objects.get(id=message_id, group__name=self.group_name)
+                if message.sender != self.user:
+                    return False  # Only sender can delete their message
+                message.delete()
+                return True
+            except Message.DoesNotExist:
+                return False
 
+        success = await delete_message_from_db()
+        if success:
+            await self.send_json({
+                "message": f"Message ID '{message_id}' deleted successfully"
+            })
+        else:
+            await self.send_json({
+                "error": "Failed to delete message. It may not exist or you are not the sender."
+            })
+
+    # ---------------------------
+    # Edit Message
+    # ---------------------------
+    async def edit_message(self, content):
+        message_id = content.get("message_id")
+        new_content = content.get("new_content", "").strip()
+        if not message_id or not new_content:
+            await self.send_json({"error": "message_id and new_content are required"})
+            return
+
+        @database_sync_to_async
+        def edit_message_in_db():
+            try:
+                message = Message.objects.get(id=message_id, group__name=self.group_name)
+                if message.sender != self.user:
+                    return False  # Only sender can edit their message
+                message.content = new_content
+                message.save()
+                return True
+            except Message.DoesNotExist:
+                return False
+
+        success = await edit_message_in_db()
+        if success:
+            await self.send_json({
+                "message": f"Message ID '{message_id}' edited successfully"
+            })
+        else:
+            await self.send_json({
+                "error": "Failed to edit message. It may not exist or you are not the sender."
+            })
+
+    # ---------------------------
+    # Reply to Message
+    # ---------------------------
+    async def reply_message(self, content):
+        original_message_id = content.get("reply_to")  # original message id
+        reply_content = content.get("reply_content", "").strip()
+        if not original_message_id or not reply_content:
+            await self.send_json({"error": "original_message_id and reply_content are required"})
+            return
+
+        @database_sync_to_async
+        def reply_to_message_in_db():
+            try:
+                original_message = Message.objects.get(id=original_message_id, group__name=self.group_name)
+                reply_message = Message.objects.create(
+                    sender=self.user,
+                    content=reply_content,
+                    group=original_message.group,
+                    #reply_to=original_message
+                )
+                return reply_message
+            except Message.DoesNotExist:
+                return None
+
+        reply_message = await reply_to_message_in_db()
+        if reply_message:
+            await self.send_json({
+                "message": f"Replied to message ID '{original_message_id}' successfully",
+                "reply_id": reply_message.id
+            })
+        else:
+            await self.send_json({
+                "error": "Failed to reply. Original message may not exist."
+            })
+    
+    # ---------------------------
+    # Pin Message
+    # ---------------------------
+    async def pin_message(self, content):
+        message_id = content.get("message_id")
+        if not message_id:
+            await self.send_json({"error": "message_id is required"})
+            return
+
+        @database_sync_to_async
+        def pin_message_in_db():
+            try:
+                message = Message.objects.get(id=message_id, group__name=self.group_name)
+                message.is_pinned = True
+                message.save()
+                return True
+            except Message.DoesNotExist:
+                return False
+
+        success = await pin_message_in_db()
+        if success:
+            await self.send_json({
+                "message": f"Message ID '{message_id}' pinned successfully"
+            })
+        else:
+            await self.send_json({
+                "error": "Failed to pin message. It may not exist."
+            })
     # Database helpers
     # ---------------------------
     @database_sync_to_async
@@ -940,7 +1073,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
             await self.load_messages(content)
         else:
             await self.send_json({"error": "Invalid action"})
-
+ 
         
     # -------------------------------
     # Action handlers
