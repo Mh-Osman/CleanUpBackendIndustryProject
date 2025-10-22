@@ -92,8 +92,11 @@ from django.db.models.functions import TruncMonth
 
 class EmployeeTaskReportView(APIView):
     permission_classes=[permissions.IsAuthenticated]
-    def get(self, request, worker_id):
+    def get(self, request,worker_id):
         one_year_ago = timezone.now() - timedelta(days=365)
+        user=request.user
+        if user.id != worker_id and not user.is_staff:
+            return Response({"detail":"Not authorized to view this report."}, status=403)
         report = (
             SpecialServicesModel.objects
             .filter(worker_id=worker_id, created_at__gte=one_year_ago)
@@ -109,6 +112,7 @@ class EmployeeTaskReportView(APIView):
             .order_by('month')
         )
         return Response(report)
+
 
 from .models import RatingModelForService
 from django.db.models import Avg, IntegerField

@@ -141,6 +141,8 @@ class FormSubmissionViewSet(viewsets.ModelViewSet):
     queryset = FormSubmissionModel.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = FormSubmissionSerializer
-    filterset_fields = ['form__form_name' , 'response_user__name']
+    search_fields = ['form__form_name', 'response_user__name', 'submitted_at']
+    filterset_fields = ['form', 'response_user', 'submitted_at']
+
 
 

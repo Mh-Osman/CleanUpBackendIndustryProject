@@ -35,14 +35,14 @@ class Building(models.Model):
         ("residential", "Residential"),
         ("commercial", "Commercial"),
     ]
-
+    
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=BUILDING_TYPES)
     city = models.CharField(max_length=100)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="buildings")
     location = models.CharField(max_length=255)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, default=24.7136)  # Riyadh default
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, default=46.6753)  # Riyadh default
+    latitude = models.DecimalField(max_digits=60, decimal_places=50, default=24.7136)  # Riyadh default
+    longitude = models.DecimalField(max_digits=60, decimal_places=50, default=46.6753)  # Riyadh default
     created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
@@ -58,7 +58,7 @@ class Apartment(models.Model):
     living_rooms = models.IntegerField()
     bathrooms = models.IntegerField()
     outdoor_area = models.BooleanField(default=False)
-    postcode = models.CharField(max_length=5, validators=[validate_saudi_postcode])
+    postcode = models.CharField(max_length=5, blank=True,null=True)
     location = models.CharField(max_length=255)
 
     # class Meta:

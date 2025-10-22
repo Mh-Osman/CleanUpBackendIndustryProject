@@ -32,8 +32,8 @@ class BuildingViewSet(viewsets.ModelViewSet):
     serializer_class = BuildingSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['name' , 'city', 'location' ]
-    search_fields = ['name', 'city', 'location' ]
+    filterset_fields = ['name' , 'region__name', 'location' ]
+    search_fields = ['name','region__name','location']
 
 class ApartmentViewSet(viewsets.ModelViewSet):
     queryset = Apartment.objects.select_related('building', 'client').all()
