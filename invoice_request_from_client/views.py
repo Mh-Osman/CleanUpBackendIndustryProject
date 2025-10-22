@@ -24,7 +24,7 @@ class OnlyEmployeeCanPost(permissions.BasePermission):
 from rest_framework import filters
 
 class InvoiceRequestFromEmployeeView(viewsets.ModelViewSet):
-    queryset=InvoiceRequestFromEmployee.objects.select_related('vendor')
+    queryset=InvoiceRequestFromEmployee.objects.select_related('vendor').order_by('-created_at')
     serializer_class=InvoiceRequestFromEmployeeSerializer
     
     filter_backends=[filters.SearchFilter,filters.OrderingFilter]

@@ -32,9 +32,16 @@ class BuildingViewSet(viewsets.ModelViewSet):
     serializer_class = BuildingSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['name' , 'region__name', 'location' ]
+    filterset_fields = ['name' , 'region__name', 'location','region__id']
     search_fields = ['name','region__name','location']
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def BuilgingByRegionIdList(request, region_id):
+    buildings = Building.objects.filter(region__id=region_id).prefetch_related('apartments','region')
+    serializer = BuildingSerializer(buildings, many=True)
+    return Response(serializer.data)
+   
 class ApartmentViewSet(viewsets.ModelViewSet):
     queryset = Apartment.objects.select_related('building', 'client').all()
     serializer_class = ApartmentSerializer

@@ -9,8 +9,8 @@ class InvoiceRequestFromEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model=InvoiceRequestFromEmployee
         fields='__all__'
+        read_only_fields=['created_at','updated_at']
         # read_only_fields=['category_show_by_name']
-    
 
     def get_vendor(self,obj):
         data=[]
