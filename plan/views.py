@@ -315,7 +315,7 @@ class InvoiceView(viewsets.ModelViewSet):
     serializer_class=InvoiceSerializer
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','type']
-    search_fields = ['invoice_id', 'client__name', 'vendor__name',"plan__plan_code","plan__name","plan__amount","building__name","type","date_issued","due_date","status"]
+    search_fields = ['invoice_id','client__email','client__name', 'vendor__name',"vendor__email","plan__plan_code","plan__name","plan__amount","building__name","type","date_issued","due_date","status"]
     def get_permissions(self):
         request=self.request.method
         if self.request.method in permissions.SAFE_METHODS:

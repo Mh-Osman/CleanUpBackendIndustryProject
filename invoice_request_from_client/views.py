@@ -36,7 +36,7 @@ class InvoiceRequestFromEmployeeView(viewsets.ModelViewSet):
         user=self.request.user
         if not user.is_authenticated:
             return [permissions.IsAuthenticated()]
-        if self.request.method in ['GET','POST']:
+        if self.request.method in ['PATCH','GET','POST']:
             return [OnlyEmployeeCanPost()]
         return [permissions.IsAdminUser()]
     

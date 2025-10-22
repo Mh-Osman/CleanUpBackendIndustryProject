@@ -156,6 +156,7 @@ ALLOWED_HOSTS = [
     "10.10.13.61",
     "10.10.13.75",
     "10.10.13.86",
+    "overrigged-botanically-lila.ngrok-free.dev",
 ]
 
 
@@ -166,10 +167,12 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-   
+   "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "https://*.ngrok-free.app",
     "http://127.0.0.1:6868",
     "http://10.10.13.86:6868",
+     "https://overrigged-botanically-lila.ngrok-free.dev",
 ]
 
 CSRF_COOKIE_SECURE = False
@@ -177,8 +180,10 @@ SESSION_COOKIE_SECURE = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    
     "http://10.10.13.86:6868",
+    "https://*.ngrok-free.app",
+     "https://overrigged-botanically-lila.ngrok-free.dev",
+    
 ]
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
@@ -209,17 +214,37 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
+ENV = config("DJANGO_ENV", default="development")
 
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / config("DATABASE_NAME"),
-        "OPTIONS": {
-            "timeout": 20,  # wait 20 seconds if DB locked
-        },
+if ENV == "development":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB"),
+            "USER": config("POSTGRES_USER"),
+            "PASSWORD": config("POSTGRES_PASSWORD"),
+            "HOST": config("POSTGRES_HOST", default="db"),
+            "PORT": config("POSTGRES_PORT", default="5432"),
+        }
+    }
+
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / config("DATABASE_NAME"),
+#         "OPTIONS": {
+#             "timeout": 20,  # wait 20 seconds if DB locked
+#         },
+#     }
+# }
 
 
 # Password validation
@@ -257,6 +282,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

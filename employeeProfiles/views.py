@@ -25,7 +25,7 @@ class CustomEmployeePermission(BasePermission):
         return obj.user == request.user
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = CustomUser.objects.filter(user_type='employee')
     serializer_class = EmployeeWithProfileSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['id','name', 'email', 'employee_profile__department', 'employee_profile__role']

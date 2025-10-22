@@ -1,3 +1,7 @@
+__pycache__
+*.pyc
+.git
+*.pyo
 .env
 Dockerfile
 docker-compose.yml
