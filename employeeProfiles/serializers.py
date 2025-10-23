@@ -9,7 +9,7 @@ from django.db.models import Avg
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeProfile
-        fields = ['id', 'department', 'role', 'shift', 'is_on_leave', 'location', 'national_id', 'contact_number', 'location', 'contract_start', 'contract_end', 'base_salary']
+        fields = ['id', 'department', 'role', 'shift', 'avatar','is_on_leave', 'location', 'national_id', 'contact_number', 'location', 'contract_start', 'contract_end', 'base_salary']
         read_only_fields = ['contract_start']
         extra_kwargs = {
             'national_id': {'validators': []}  # DRF এর default UniqueValidator remove
@@ -26,7 +26,7 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'employee_profile', 'tasks_completed' , 'client_rating' , 'total']
+        fields = ['id', 'name', 'email', 'user_type', 'prime_phone', 'is_active', 'date_joined', 'employee_profile', 'tasks_completed' , 'client_rating' , 'total']
         read_only_fields = ['id', 'date_joined']
     def validate(self, attrs):
         profile_data = attrs.get('employee_profile')
@@ -48,8 +48,11 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
+          # Set default user_type only if not provided
+        if 'user_type' not in validated_data:
+            validated_data['user_type'] = 'employee'
         profile_data = validated_data.pop('employee_profile', {})
-        validated_data['user_type'] = 'employee'
+        # validated_data['user_type'] = validated_data.get('user_type', 'employee') # default to 'employee' if not provided
         validated_data['is_active'] = True  # new employee active by default
         validated_data['password'] = '12345'  # default password, should be changed later
         user = CustomUser.objects.create_user(**validated_data)
@@ -136,4 +139,12 @@ class EmployOverView(serializers.Serializer):
     average_performance=serializers.SerializerMethodField(read_only=True)
 
 
+
+class SupervisorsListSerializer(serializers.ModelSerializer):
+     
+     employee_profile = EmployeeProfileSerializer(required=False)
+     class Meta:
+        model = CustomUser
+        fields = ['id', 'name', 'username', 'email', 'user_type', 'prime_phone', 'last_login', 'employee_profile']
+        extra_kwargs = {'password': {'write_only': True}}
 

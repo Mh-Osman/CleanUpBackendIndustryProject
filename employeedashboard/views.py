@@ -1,12 +1,37 @@
-from django.shortcuts import render
-
-# Create your views here.
-from rest_framework import viewsets, permissions
-from .models import LeaseFormModel
-from .serializers import LeaseFormSerializer
-from rest_framework import filters
+from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from .models import LeaseFormModel, SupervisorFormModel
+from .serializers import LeaseFormSerializer, SupervisorFormSerializer
+
+
+# ✅ Custom Permission (inside same file)
+class SupervisorPostAdminReadOnly(permissions.BasePermission):
+    """
+    Custom permission:
+    - Admin can only GET (read-only)
+    - Supervisor can only POST (create)
+    - Others denied
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+
+        # Not logged in → deny
+        if not user or not user.is_authenticated:
+            return False
+
+        # Admins can only GET
+        if user.is_staff or getattr(user, 'user_type', '') == 'admin':
+            return request.method in permissions.SAFE_METHODS
+
+        # Supervisors can only POST
+        if getattr(user, 'user_type', '') == 'supervisor':
+            return request.method == 'POST'
+
+        # All others denied
+        return False
+
 class LeaseFormViewSet(viewsets.ModelViewSet):
     queryset = LeaseFormModel.objects.all()
     permission_classes = [permissions.IsAuthenticated]
@@ -17,13 +42,26 @@ class LeaseFormViewSet(viewsets.ModelViewSet):
     ordering_fields = []  # Add any ordering fields if needed
 
 
-from .models import SupervisorFormModel
-from .serializers import SupervisorFormSerializer
+# ✅ SupervisorForm View
 class SupervisorFormViewSet(viewsets.ModelViewSet):
     queryset = SupervisorFormModel.objects.all()
-    permission_classes = [IsAdminUser]
     serializer_class = SupervisorFormSerializer
+    permission_classes = [IsAuthenticated, SupervisorPostAdminReadOnly]
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['supervisor__name', 'employee__name', 'report_date', 'performance']
     search_fields = ['supervisor__name', 'employee__name', 'work_summary', 'supervisor_comments', 'issues_reported']
     ordering_fields = ['report_date', 'last_updated', 'created_at']
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+@api_view(['GET'])
+def supervisor_form_list(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response({"detail": "Authentication credentials were not provided."}, status=401)
+    
+    all_forms = SupervisorFormModel.objects.filter(supervisor=user)
+
+    serializer = SupervisorFormSerializer(all_forms, many=True)
+    return Response(serializer.data)

@@ -47,8 +47,8 @@ class ApartmentViewSet(viewsets.ModelViewSet):
     serializer_class = ApartmentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['apartment_number', 'building__name', 'client__name']
-    search_fields = ['apartment_number', 'building__name', 'client__name']
+    filterset_fields = ['apartment_number', 'building__name', 'client__name', 'client_id' , "building_id"]
+    search_fields = ['apartment_number', 'building__name', 'client__name',]
     ordering_fields = ['apartment_number', 'building__name', 'client__name']
 
 @api_view(['GET'])
@@ -163,7 +163,8 @@ class EmployeeInMapViewset(viewsets.ViewSet):
 
     def list(self, request):
         user = request.user
-
+        #if user.user_type in ['admin', 'client']:
+            # return Response({'detail': 'You are not a valid person for this action.'}, status=403)
         # Get query params for search and filtering
         search = request.query_params.get('search', None)  # general search
        # city_filter = request.query_params.get('city', None)

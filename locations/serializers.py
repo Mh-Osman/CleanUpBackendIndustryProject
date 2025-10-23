@@ -58,7 +58,20 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Apartment
-        fields = "__all__"
+        fields = [
+            'id',
+            'client',
+            
+            'building',
+            'apartment_number',
+            'floor',
+            'living_rooms',
+            'bathrooms',
+            'outdoor_area',
+            'postcode',
+            'location',
+            'building_id',   # if you are using write-only id field
+        ]
         read_only_fields = ['id']
         UniqueTogether = ('building', 'client', 'apartment_number')
     

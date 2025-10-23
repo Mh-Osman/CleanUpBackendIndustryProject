@@ -22,13 +22,22 @@ class CustomEmployeePermission(BasePermission):
     Allow employees to view only their own profiles.
     """
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        return obj == request.user
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(user_type='employee')
+# <<<<<<< HEAD
+    queryset = CustomUser.objects.filter(user_type__in=['employee', 'supervisor'])
+
+# =======
+#     queryset = CustomUser.objects.filter(user_type='employee')
+# >>>>>>> origin/testingallmerge
     serializer_class = EmployeeWithProfileSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['id','name', 'email', 'employee_profile__department', 'employee_profile__role']
+# <<<<<<< HEAD
+    filterset_fields = ['name', 'email', 'employee_profile__department', 'employee_profile__role','employee_profile__is_on_leave']
+# =======
+#     filterset_fields = ['id','name', 'email', 'employee_profile__department', 'employee_profile__role']
+# >>>>>>> origin/testingallmerge
     search_fields = ['name', 'email', 'employee_profile__national_id', 'employee_profile__contact_number']
 
     def get_permissions(self):
@@ -246,5 +255,13 @@ class EmployeeOverviewViewset(APIView):
 #                 data[region.id] = region_dict
 
 #         return Response(data)
+
+from .serializers import  SupervisorsListSerializer
+class SupervisorsListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = CustomUser.objects.filter(user_type = 'supervisor')
+    serializer_class = SupervisorsListSerializer
+    permission_classes = [IsAdminUser]
+
+
 
 
