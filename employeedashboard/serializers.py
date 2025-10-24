@@ -36,6 +36,7 @@ class SupervisorFormSerializer(serializers.ModelSerializer):
             'employee_mail',
             'report_date',
             'work_summary',
+            'report_summary',
             'performance',
             'supervisor_comments',
             'issues_reported',

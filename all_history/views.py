@@ -9,7 +9,7 @@ class DashboardRecentActivityView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-      
+            
 
             logs = (
                 LogEntry.objects.select_related("actor", "content_type")
@@ -18,4 +18,7 @@ class DashboardRecentActivityView(APIView):
 
             serializer = HistoryTrackSerializer(logs, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+    # def post(self, request, *args, **kwargs):
+          
+        
 
