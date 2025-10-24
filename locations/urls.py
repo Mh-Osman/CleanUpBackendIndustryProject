@@ -11,7 +11,7 @@ from .views import (
     # EmployeeInMapViewset2,
 )
 
-from .views import location_overview
+from .views import location_overview, BuilgingByRegionIdList
 
 
 router = DefaultRouter()
@@ -25,5 +25,6 @@ router.register(r'location_details_according_active_task', EmployeeInMapViewset,
 urlpatterns = [
     path('', include(router.urls)),
     path('locations/overview/', location_overview, name='location-overview'),  # e.g. /api/locations/location/overview/
+    path('buildings/region/<int:region_id>/', BuilgingByRegionIdList, name='buildings-by-region'),  # e.g. /api/locations/buildings/by-region/1/
   
 ]

@@ -22,12 +22,13 @@ choices = [
     ('Below Average', 'Below Average'),
     ('Poor', 'Poor'),
 ]
+from auditlog.registry import auditlog
 class SupervisorFormModel(models.Model):
    title = models.CharField(max_length=100)
    supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supervisor_forms", limit_choices_to={'user_type': 'supervisor'})
    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="employee_forms", limit_choices_to={'user_type': 'employee'})
    report_date = models.DateField(auto_now_add=True) #assign auto now_add=True for automatic date
-   work_summary = models.TextField() # Summary of work 
+   work_summary = models.TextField(null= True, blank=True) # Summary of work 
    supervisor_comments = models.TextField(null=True, blank=True)
    issues_reported = models.TextField(null=True, blank=True)
    attachments = models.FileField(upload_to='supervisor_forms/', null=True, blank=True)
@@ -40,4 +41,4 @@ class SupervisorFormModel(models.Model):
          return f"Supervisor Report by {self.supervisor.name} for {self.employee.name} on {self.report_date}"
    
 
-   
+auditlog.register(SupervisorFormModel)

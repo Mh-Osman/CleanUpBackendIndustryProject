@@ -128,7 +128,7 @@ class ForgetPasswordAPIView(APIView):
         try:
             user = CustomUser.objects.get(email=email)
             otp_obj = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            send_otp_email(user.email, otp_obj.code)
+            send_otp_email(user.email,otp_obj.code,user.name)
             return Response({"message":"OTP sent to reset password"}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({"error":"User not found"}, status=status.HTTP_404_NOT_FOUND)

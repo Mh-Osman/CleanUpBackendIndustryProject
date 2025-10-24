@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from auditlog.registry import auditlog
 User = get_user_model()
 
 # Create your models here.
@@ -12,7 +13,8 @@ class Group(models.Model):
     
     def __str__(self):
         return f"Group: {self.name}, ID: {self.id}"
-    
+
+auditlog.register(Group)
 
 class GroupMembership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)

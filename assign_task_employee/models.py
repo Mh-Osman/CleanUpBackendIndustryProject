@@ -13,7 +13,7 @@ User=get_user_model()
 BILL_CYCLE=(
     ('Daily','Daily'),
     ('Monthly','Monthly'),
-    ('yearly','Yearly'),
+    ('Yearly','Yearly'),
 )
 
 
@@ -97,3 +97,5 @@ class RatingModelForService(models.Model):
    created_at=models.DateTimeField(auto_now_add=True,null=True,blank=True)
    updated_at=models.DateField(auto_now=True,null=True,blank=True)
 
+
+auditlog.register(RatingModelForService)

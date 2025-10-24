@@ -14,23 +14,25 @@ class SupervisorPostAdminReadOnly(permissions.BasePermission):
     - Others denied
     """
 
-    def has_permission(self, request, view):
-        user = request.user
+    # def has_permission(self, request, view):
+    #     user = request.user
 
-        # Not logged in → deny
-        if not user or not user.is_authenticated:
-            return False
+    #     # Not logged in → deny
+    #     if not user or not user.is_authenticated:
+    #         return False
 
-        # Admins can only GET
-        if user.is_staff or getattr(user, 'user_type', '') == 'admin':
-            return request.method in permissions.SAFE_METHODS
+    #     # Admins can only GET
+    #     if user.is_staff or getattr(user, 'user_type', '') == 'admin':
+    #         return request.method in permissions.SAFE_METHODS
 
-        # Supervisors can only POST
-        if getattr(user, 'user_type', '') == 'supervisor':
-            return request.method == 'POST'
-
-        # All others denied
-        return False
+    #     # Supervisors can only POST
+    #     if getattr(user, 'user_type', '') == 'supervisor':
+    #         return request.method in ['POST']
+    #     # All others denied
+    #     return False
+    def has_object_permission(self, request, view, obj):
+        print(request.user.id)
+        return request.user==obj.supervisor or request.user.is_staff
 
 class LeaseFormViewSet(viewsets.ModelViewSet):
     queryset = LeaseFormModel.objects.all()
@@ -44,9 +46,9 @@ class LeaseFormViewSet(viewsets.ModelViewSet):
 
 # ✅ SupervisorForm View
 class SupervisorFormViewSet(viewsets.ModelViewSet):
-    queryset = SupervisorFormModel.objects.all()
+    queryset = SupervisorFormModel.objects.all().order_by('-created_at')
     serializer_class = SupervisorFormSerializer
-    permission_classes = [IsAuthenticated, SupervisorPostAdminReadOnly]
+    permission_classes = [SupervisorPostAdminReadOnly]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['supervisor__name', 'employee__name', 'report_date', 'performance']

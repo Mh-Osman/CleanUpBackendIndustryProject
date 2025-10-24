@@ -1,7 +1,6 @@
 from django.db import models
 from users.models import CustomUser
-from subscriptions.models import Subscription
-
+from plan.models import Subscription
 # Create your models here.
 class ExpenseCategory(models.Model):
     name = models.CharField(max_length=100)
