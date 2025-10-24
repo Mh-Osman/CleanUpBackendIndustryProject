@@ -9,6 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
+# from cloudinary_storage.storage import RawMediaCloudinaryStorage, MediaCloudinaryStorage
+
 
 from pathlib import Path
 from decouple import config
@@ -25,7 +30,7 @@ SECRET_KEY = config("SECRET_KEY")
 STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", cast=bool)
+DEBUG=True
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -130,12 +135,24 @@ INSTALLED_APPS = [
 
     'employeedashboard',
     #osman
-    'dynamicForm'
+    'dynamicForm',
+
+    # 'cloudinary',
+    # 'cloudinary_storage',
 ]
-# for use celery 
+ 
 
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+#     'API_KEY': config('CLOUDINARY_API_KEY'),
+#     'API_SECRET': config('CLOUDINARY_API_SECRET'),
+# }
 
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+# # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
