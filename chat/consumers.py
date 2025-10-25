@@ -1,607 +1,44 @@
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from django.contrib.auth.models import User
-from django.utils import timezone
-from .models import Group, Message, GroupMembership
+# import json
+# from channels.generic.websocket import AsyncWebsocketConsumer
+# from channels.db import database_sync_to_async
 
+# from django.utils import timezone
+# from .models import Group, Message, GroupMembership
 
-# class GroupChatConsumer(AsyncWebsocketConsumer):
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
 
-#     async def connect(self):
-#         self.group_id_str = self.scope['url_route']['kwargs']['group_id']
-#         self.group_name = self.scope['url_route']['kwargs']['group_name']
-#         # admin_id যদি URL-এ থাকে (routing.py-এ define করতে হবে)
-#         self.admin_id = self.scope['url_route']['kwargs'].get('admin_id')
+# from django.contrib.auth.models import AnonymousUser
 
-#         @database_sync_to_async
-#         def get_or_create_group():
-#             from django.core.exceptions import ObjectDoesNotExist
-#             try:
-#                 if self.group_id_str == '0':
-#                     # নতুন গ্রুপ বানাতে admin_id দরকার
-#                     if not self.admin_id:
-#                         return None
-#                     admin_user = User.objects.get(id=self.admin_id)
-#                     return Group.objects.create(name=self.group_name, admin=admin_user)
-#                 else:
-#                     group_id = int(self.group_id_str)
-#                     return Group.objects.get(id=group_id)
-#             except (ObjectDoesNotExist, ValueError):
-#                 return None
 
-#         group = await get_or_create_group()
+# import json
+# from channels.generic.websocket import AsyncWebsocketConsumer
+# from channels.db import database_sync_to_async
+# from django.utils import timezone
+# from django.contrib.auth.models import AnonymousUser
+# from .models import Group, Message, GroupMembership
 
-#         if not group:
-#             # Accept connection so we can send error JSON, তারপর close
-#             await self.accept()
-#             await self.send(text_data=json.dumps({
-#                 "status": "error",
-#                 "message": "Invalid group ID or admin ID not provided"
-#             }))
-#             await self.close()
-#             return
 
-#         self.group_id = group.id
-#         self.group_name = group.name
-#         self.room_group_name = f"group_{self.group_id}"
 
-#         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-#         await self.accept()
-
-#         # Connection success
-#         await self.send(text_data=json.dumps({
-#             "status": "connected",
-#             "group_id": self.group_id,
-#             "group_name": self.group_name
-#         }))
-
-#     async def disconnect(self, close_code):
-#         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
-#     async def receive(self, text_data=None, bytes_data=None):
-#         if not text_data:
-#             await self.send(json.dumps({"status": "error", "message": "No data received"}))
-#             return
-
-#         try:
-#             data = json.loads(text_data)
-#         except json.JSONDecodeError:
-#             await self.send(json.dumps({"status": "error", "message": "Invalid JSON"}))
-#             return
-
-#         action = data.get('action')
-
-#         if action == "join":
-#             await self.handle_join(data)
-#         elif action == "leave":
-#             await self.handle_leave(data)
-#         elif action == "message":
-#             await self.handle_message(data)
-#         elif action == "add_admin":
-#             await self.handle_add_admin(data)
-#         elif action == "load_messages":
-#             await self.handle_load_messages(data)
-#         else:
-#             await self.send(json.dumps({"status": "error", "message": "Invalid action"}))
-
-#     # -------- Join ----------
-#     async def handle_join(self, data):
-#         user_id = data.get('user_id')
-#         if not user_id:
-#             await self.send(json.dumps({"status": "error", "message": "user_id is required"}))
-#             return
-
-#         @database_sync_to_async
-#         def add_user_to_group():
-#             try:
-#                 user = User.objects.get(id=user_id)
-#                 group = Group.objects.get(id=self.group_id)
-#                 membership, created = GroupMembership.objects.get_or_create(user=user, group=group)
-#                 return created, user
-#             except (User.DoesNotExist, Group.DoesNotExist):
-#                 return False, None
-
-#         created, user = await add_user_to_group()
-#         if created:
-#             await self.send(text_data=json.dumps({"status": "success", "message": f"{user.username} joined the group"}))
-#         else:
-#             await self.send(text_data=json.dumps({"status": "error", "message": "User already in group or invalid"}))
-
-#     # -------- Leave ----------
-#     async def handle_leave(self, data):
-#         user_id = data.get('user_id')
-#         if not user_id:
-#             await self.send(json.dumps({"status": "error", "message": "user_id is required"}))
-#             return
-
-#         @database_sync_to_async
-#         def remove_user_from_group():
-#             try:
-#                 user = User.objects.get(id=user_id)
-#                 deleted_count, _ = GroupMembership.objects.filter(user=user, group_id=self.group_id).delete()
-#                 return deleted_count, user
-#             except (User.DoesNotExist, Group.DoesNotExist):
-#                 return 0, None
-
-#         deleted_count, user = await remove_user_from_group()
-#         if deleted_count:
-#             await self.send(json.dumps({"status": "success", "message": f"{user.username} left the group"}))
-#         else:
-#             await self.send(json.dumps({"status": "error", "message": "User not in group or invalid"}))
-
-#     # -------- Add admin ----------
-#     async def handle_add_admin(self, data):
-#         user_id = data.get('user_id')
-#         if not user_id:
-#             await self.send(json.dumps({"status": "error", "message": "user_id is required"}))
-#             return
-
-#         @database_sync_to_async
-#         def add_admin_to_group():
-#             try:
-#                 user = User.objects.get(id=user_id)
-#                 group = Group.objects.get(id=self.group_id)
-#                 group.admin = user
-#                 group.save()
-#                 return True, user
-#             except (User.DoesNotExist, Group.DoesNotExist):
-#                 return False, None
-
-#         success, user = await add_admin_to_group()
-#         if success:
-#             await self.send(text_data=json.dumps({"status": "success", "message": f"{user.username} is now the admin of the group"}))
-#         else:
-#             await self.send(text_data=json.dumps({"status": "error", "message": "Failed to set admin. User or group may be invalid."}))
-
-#     # -------- Send message ----------
-#     async def handle_message(self, data):
-#         message = data.get('message', '').strip()
-#         user_id = data.get('user_id')
-#         if not message or not user_id:
-#             await self.send(json.dumps({"status": "error", "message": "message and user_id are required"}))
-#             return
-
-#         @database_sync_to_async
-#         def save_message():
-#             try:
-#                 user = User.objects.get(id=user_id)
-#                 group = Group.objects.get(id=self.group_id)
-#                 if not GroupMembership.objects.filter(user=user, group=group).exists():
-#                     return None
-#                 return Message.objects.create(sender=user, content=message, group=group)
-#             except (User.DoesNotExist, Group.DoesNotExist):
-#                 return None
-
-#         saved_message = await save_message()
-#         if not saved_message:
-#             await self.send(json.dumps({"status": "error", "message": "User not authenticated or not a member"}))
-#             return
-
-#         # Timestamp to UTC ISO
-#         ts = saved_message.timestamp
-#         # ensure aware: if naive, make it aware using current timezone
-#         try:
-#             ts_iso = ts.astimezone(timezone.utc).isoformat()
-#         except Exception:
-#             ts_iso = timezone.localtime(ts).isoformat()
-
-#         await self.channel_layer.group_send(
-#             self.room_group_name,
-#             {
-#                 'type': 'chat_message',
-#                 'message': saved_message.content,
-#                 'timestamp': ts_iso,
-#                 'sender_username': saved_message.sender.username
-#             }
-#         )
-
-#     # -------- Load previous messages ----------
-#     async def handle_load_messages(self, data):
-#         # frontend can send {"action":"load_messages", "limit": 50}
-#         try:
-#             limit = int(data.get("limit", 20))
-#         except Exception:
-#             limit = 20
-#         if limit <= 0:
-#             limit = 20
-
-#         @database_sync_to_async
-#         def get_recent_messages():
-#             try:
-#                 group = Group.objects.get(id=self.group_id)
-#                 msgs = Message.objects.filter(group=group).order_by('-timestamp')[:limit]
-#                 result = []
-#                 for msg in reversed(msgs):  # chronological order
-#                     # safe timestamp to UTC iso
-#                     try:
-#                         ts = msg.timestamp.astimezone(timezone.utc).isoformat()
-#                     except Exception:
-#                         ts = timezone.localtime(msg.timestamp).isoformat()
-#                     result.append({
-#                         "id": msg.id,
-#                         "sender": msg.sender.username,
-#                         "content": msg.content,
-#                         "timestamp": ts
-#                     })
-#                 return result
-#             except Group.DoesNotExist:
-#                 return []
-
-#         messages = await get_recent_messages()
-#         await self.send(text_data=json.dumps({"status": "history", "messages": messages}))
-
-#     # -------- Broadcast handler ----------
-#     async def chat_message(self, event):
-#         await self.send(text_data=json.dumps({
-#             'message': event['message'],
-#             'timestamp': event['timestamp'],
-#             'sender_username': event['sender_username']
-#         }))
-from django.contrib.auth.models import AnonymousUser
-
-
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from django.utils import timezone
-from django.contrib.auth.models import AnonymousUser
-from .models import Group, Message, GroupMembership
-
-
-# class GroupChatConsumer(AsyncWebsocketConsumer):
-
-#     async def connect(self):
-#         # Extract user from JWT (via middleware)
-#         self.user = self.scope.get("user", AnonymousUser())
-
-#         if not self.user or self.user.is_anonymous:
-#             await self.close()
-#             return
-
-#         self.group_id_str = self.scope["url_route"]["kwargs"]["group_id"]
-#         self.group_name = self.scope["url_route"]["kwargs"]["group_name"]
-
-#         # Validate or create group
-#         group = await self.get_or_create_group()
-#         if not group:
-#             await self.accept()
-#             await self.send(text_data=json.dumps({
-#                 "status": "error",
-#                 "message": "Invalid group ID or admin ID not provided"
-#             }))
-#             await self.close()
-#             return
-
-#         self.group = group
-#         self.group_id = group.id
-#         self.room_group_name = f"group_{self.group_id}"
-
-#         # Join room group
-#         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-#         await self.accept()
-
-#         await self.send(text_data=json.dumps({
-#             "status": "connected",
-#             "user": self.user.username,
-#             "group_id": self.group_id,
-#             "group_name": self.group_name
-#         }))
-
-#     # --- Database helper
-#     @database_sync_to_async
-#     def get_or_create_group(self):
-#         from django.core.exceptions import ObjectDoesNotExist
-#         try:
-#             group_id = int(self.group_id_str)
-#             return Group.objects.get(id=group_id)
-#         except (ObjectDoesNotExist, ValueError):
-#             return None
-
-#     # --- Disconnect
-#     async def disconnect(self, close_code):
-#         if hasattr(self, "room_group_name"):
-#             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
-#     # --- Message receiver
-#     async def receive(self, text_data=None, bytes_data=None):
-#         if not text_data:
-#             await self.send(json.dumps({"status": "error", "message": "No data received"}))
-#             return
-
-#         try:
-#             data = json.loads(text_data)
-#         except json.JSONDecodeError:
-#             await self.send(json.dumps({"status": "error", "message": "Invalid JSON"}))
-#             return
-
-#         action = data.get("action")
-
-#         if action == "join":
-#             await self.handle_join()
-#         elif action == "leave":
-#             await self.handle_leave()
-#         elif action == "message":
-#             await self.handle_message(data)
-#         elif action == "add_admin":
-#             await self.handle_add_admin(data)
-#         elif action == "load_messages":
-#             await self.handle_load_messages(data)
-#         else:
-#             await self.send(json.dumps({"status": "error", "message": "Invalid action"}))
-
-#     # --- Join Group
-#     async def handle_join(self):
-#         @database_sync_to_async
-#         def add_user_to_group():
-#             try:
-#                 membership, created = GroupMembership.objects.get_or_create(
-#                     user=self.user, group=self.group
-#                 )
-#                 return created
-#             except Exception:
-#                 return False
-
-#         created = await add_user_to_group()
-#         if created:
-#             await self.send(json.dumps({
-#                 "status": "success",
-#                 "message": f"{self.user.username} joined the group"
-#             }))
-#         else:
-#             await self.send(json.dumps({
-#                 "status": "error",
-#                 "message": "Already in group"
-#             }))
-
-#     # --- Leave Group
-#     async def handle_leave(self):
-#         @database_sync_to_async
-#         def remove_user_from_group():
-#             try:
-#                 deleted_count, _ = GroupMembership.objects.filter(
-#                     user=self.user, group=self.group
-#                 ).delete()
-#                 return deleted_count
-#             except Exception:
-#                 return 0
-
-#         deleted_count = await remove_user_from_group()
-#         if deleted_count:
-#             await self.send(json.dumps({
-#                 "status": "success",
-#                 "message": f"{self.user.username} left the group"
-#             }))
-#         else:
-#             await self.send(json.dumps({
-#                 "status": "error",
-#                 "message": "User not in group"
-#             }))
-
-#     # --- Add admin
-#     async def handle_add_admin(self, data):
-#         target_user_id = data.get("user_id")
-
-#         @database_sync_to_async
-#         def add_admin():
-#             try:
-#                 target_user = self.user.__class__.objects.get(id=target_user_id)
-#                 group = self.group
-#                 if group.admin != self.user:
-#                     return False, "Only admin can assign new admin"
-#                 group.admin = target_user
-#                 group.save()
-#                 return True, target_user.username
-#             except Exception:
-#                 return False, None
-
-#         success, username = await add_admin()
-#         if success:
-#             await self.send(json.dumps({
-#                 "status": "success",
-#                 "message": f"{username} is now the admin"
-#             }))
-#         else:
-#             await self.send(json.dumps({
-#                 "status": "error",
-#                 "message": username or "Failed to add admin"
-#             }))
-
-#     # --- Send message
-#     async def handle_message(self, data):
-#         message_text = data.get("message", "").strip()
-#         if not message_text:
-#             await self.send(json.dumps({"status": "error", "message": "Message required"}))
-#             return
-
-#         @database_sync_to_async
-#         def save_message():
-#             try:
-#                 if not GroupMembership.objects.filter(user=self.user, group=self.group).exists():
-#                     return None
-#                 return Message.objects.create(
-#                     sender=self.user, content=message_text, group=self.group
-#                 )
-#             except Exception:
-#                 return None
-
-#         saved_message = await save_message()
-#         if not saved_message:
-#             await self.send(json.dumps({
-#                 "status": "error",
-#                 "message": "Not allowed to send message"
-#             }))
-#             return
-
-#         ts = saved_message.timestamp
-#         ts_iso = timezone.localtime(ts).isoformat()
-
-#         await self.channel_layer.group_send(
-#             self.room_group_name,
-#             {
-#                 "type": "chat_message",
-#                 "message": saved_message.content,
-#                 "timestamp": ts_iso,
-#                 "sender_username": saved_message.sender.username
-#             }
-#         )
-
-#     # --- Load messages
-#     async def handle_load_messages(self, data):
-#         limit = int(data.get("limit", 20))
-
-#         @database_sync_to_async
-#         def get_recent_messages():
-#             msgs = Message.objects.filter(group=self.group).order_by("-timestamp")[:limit]
-#             result = []
-#             for msg in reversed(msgs):
-#                 ts = timezone.localtime(msg.timestamp).isoformat()
-#                 result.append({
-#                     "id": msg.id,
-#                     "sender": msg.sender.username,
-#                     "content": msg.content,
-#                     "timestamp": ts
-#                 })
-#             return result
-
-#         messages = await get_recent_messages()
-#         await self.send(json.dumps({"status": "history", "messages": messages}))
-
-#     # --- Broadcast
-#     async def chat_message(self, event):
-#         await self.send(json.dumps({
-#             "message": event["message"],
-#             "timestamp": event["timestamp"],
-#             "sender_username": event["sender_username"]
-#         }))
-
-"""3rd script"""
 # # consumers.py
 # from datetime import datetime
+# from django.utils import timezone
 # from channels.generic.websocket import AsyncJsonWebsocketConsumer
 # from django.contrib.auth.models import AnonymousUser
 # from channels.db import database_sync_to_async
-# from .models import Group, CoAdmin
-
-# class GroupChatConsumer(AsyncJsonWebsocketConsumer):
-
-#     async def connect(self):
-#         self.user = self.scope.get("user", AnonymousUser())
-#         if not self.user or self.user.is_anonymous:
-#             await self.close()
-#             return
-
-#         await self.accept()
-#         await self.send_json({
-#             "status": "connected",
-#             "user": self.user.username,
-#         })
-
-#     async def disconnect(self, close_code):
-#         if hasattr(self, "group_name"):
-#             await self.channel_layer.group_discard(self.group_name, self.channel_name)
-
-#     async def receive_json(self, content, **kwargs):
-#         action = content.get("action")
-#         if action == "create_group":
-#             await self.handle_create_group(content)
-#         elif action == "join_group":
-#             await self.handle_join_group(content)
-#         elif action == "send_message":
-#             await self.handle_send_message(content)
-#         else:
-#             await self.send_json({"error": "Invalid action"})
-
-#     # -------------------------------
-#     # Action handlers
-#     # -------------------------------
-#     async def handle_create_group(self, content):
-#         group_name = content.get("group_name", "").strip()
-#         if not group_name:
-#             await self.send_json({"error": "Group name required"})
-#             return
-
-#         group, created = await self.get_or_create_group(group_name, self.user)
-
-#         if created:
-#             await self.send_json({
-#                 "message": f"Group '{group_name}' created successfully",
-#                 "admin": self.user.username
-#             })
-#         else:
-#             await self.send_json({"message": f"Group '{group_name}' already exists"})
-
-#         await self.channel_layer.group_add(group_name, self.channel_name)
-#         self.group_name = group_name
-
-#     async def handle_join_group(self, content):
-#         group_name = content.get("group_name", "").strip()
-#         if not group_name:
-#             await self.send_json({"error": "Group name required"})
-#             return
-
-#         exists = await self.group_exists(group_name)
-#         if not exists:
-#             await self.send_json({"error": "Group does not exist"})
-#             return
-
-#         await self.channel_layer.group_add(group_name, self.channel_name)
-#         self.group_name = group_name
-#         await self.send_json({"message": f"Joined group '{group_name}'"})
-
-#     async def handle_send_message(self, content):
-#         if not hasattr(self, "group_name"):
-#             await self.send_json({"error": "You must join a group first"})
-#             return
-
-#         message = content.get("message", "").strip()
-#         if not message:
-#             await self.send_json({"error": "Message cannot be empty"})
-#             return
-        
-#         await self.channel_layer.group_send(
-#             self.group_name,
-#             {
-#                 "type": "chat_message",
-#                 "user": self.user.username,
-#                 "message": message,
-#                 "timestamp": datetime.utcnow().isoformat()
-#             }
-#         )
-
-#     async def chat_message(self, event):
-#         await self.send_json({
-#             "sender_username": event["user"],
-#             "message": event["message"],
-#             "timestamp": event["timestamp"]
-#         })
-
-#     # -------------------------------
-#     # Database helpers
-#     # -------------------------------
-#     @database_sync_to_async
-#     def get_or_create_group(self, name, user):
-#         group, created = Group.objects.get_or_create(
-#             name=name,
-#             defaults={"admin": user}
-#         )
-#         if created:
-#             CoAdmin.objects.create(group=group, user=user)
-#         return group, created
-
-#     @database_sync_to_async
-#     def group_exists(self, name):
-#         return Group.objects.filter(name=name).exists()
+# from .models import Group, CoAdmin, GroupMembership, Message,OneToOneChat, OneToOneChatmassage
 
 
-# consumers.py
+import json
 from datetime import datetime
-from django.utils import timezone
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
-from .models import Group, CoAdmin, GroupMembership, Message,OneToOneChat, OneToOneChatmassage
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
+from .models import Group, CoAdmin, GroupMembership, Message, OneToOneChat, OneToOneChatmassage
+User = get_user_model()
 class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
@@ -1165,7 +602,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
     # Database helpers
     @database_sync_to_async
     def get_user(self, username):
-        from django.contrib.auth.models import User
+        
         try:
             return User.objects.get(username=username)
         except User.DoesNotExist:
@@ -1181,17 +618,17 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
         return chat
         
     @database_sync_to_async
-    def save_message_to_db(self, message_text):
+    def save_message_to_db(self, message_text, image_url=None, file_url=None):
         try:
-            OneToOneChatmassage.objects.create(
-                chat = self.chat,
+            msg = OneToOneChatmassage.objects.create(
+                chat=self.chat,
                 sender=self.user,
                 content=message_text,
                 image_url=image_url if image_url else None, 
                 file_url=file_url if file_url else None,
                
             )
-            return True
+            return msg
         except Exception:
             return False
         

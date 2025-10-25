@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id','name','email','prime_phone','user_type','password','is_active']
+        fields = ['id','name','email','prime_phone','username','user_type','password','is_active']
         read_only_fields = ['id','is_active']
 
     def create(self, validated_data):

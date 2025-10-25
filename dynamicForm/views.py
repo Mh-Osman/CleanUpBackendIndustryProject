@@ -66,7 +66,8 @@ def SubmitDynamicFormView(request, form_id):
 
     FormSubmissionModel.objects.create(
         form=form_instance,
-        data=submission_data
+        data=submission_data,
+        response_user=request.user
     )
 
     return Response({

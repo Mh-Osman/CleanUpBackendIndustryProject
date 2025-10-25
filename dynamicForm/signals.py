@@ -14,7 +14,7 @@ def send_form_submission_notification(sender, instance, created, **kwargs):
     """
     if created:
         Notification.objects.create(
-            for_user=instance.response_user.name,
+            for_user=instance.response_user,
             title="New Form Submission",
             for_admin=True,
             message=f"A new form has been submitted by {instance.response_user.name}.",
