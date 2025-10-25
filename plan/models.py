@@ -62,7 +62,7 @@ class ServiceLineItem(models.Model):
 
 
 auditlog.register(PlanModel)
-auditlog.register(ServiceLineItem)
+# auditlog.register(ServiceLineItem)
 
 class Subscription(models.Model):
     STATUS_CHOICES = (

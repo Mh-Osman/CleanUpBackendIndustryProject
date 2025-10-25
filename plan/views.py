@@ -51,18 +51,18 @@ class SubscriptionListCreateView(viewsets.ModelViewSet):
             #   next_payment_date=subscription.next_payment_date,
               end_date=subscription.current_period_end
               )
-        invoice=InvoiceModel.objects.create(
-            invoice_id=str(uuid.uuid4()),  # unique invoice ID
-            type="outgoing",
-            date_issued=subscription.start_date,
-            due_date=subscription.current_period_end,
-            client=subscription.user,
-            plan=subscription.plan,
-            note=f"{self.request.user.name} subscribed",
-            status="paid" if getattr(subscription, "payment_method", "prepaid") == "prepaid" else "unpaid",
-            total_amount=subscription.plan.amount,
-            building=subscription.building
-        )
+        # invoice=InvoiceModel.objects.create(
+        #     invoice_id=str(uuid.uuid4()),  # unique invoice ID
+        #     type="outgoing",
+        #     date_issued=subscription.start_date,
+        #     due_date=subscription.current_period_end,
+        #     client=subscription.user,
+        #     plan=subscription.plan,
+        #     note=f"{self.request.user.name} subscribed",
+        #     status="paid" if getattr(subscription, "payment_method", "prepaid") == "prepaid" else "unpaid",
+        #     total_amount=subscription.plan.amount,
+        #     building=subscription.building
+        # )
                
 
 

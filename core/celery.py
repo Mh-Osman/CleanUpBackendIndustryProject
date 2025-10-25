@@ -22,6 +22,6 @@ from celery.schedules import crontab
 app.conf.beat_schedule = {
     "auto-cancel-subscriptions-daily": {
         "task": "plan.tasks.auto_cancel_expired_subscriptions",
-        "schedule": crontab(),  # runs every minute
+        "schedule": crontab(hour=0,minute=0),  # runs every day at midnight
     },
 }

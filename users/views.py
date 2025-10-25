@@ -8,7 +8,7 @@ from .models import CustomUser, OTP
 from .serializers import UserSerializer, OTPVerifySerializer, ResetPasswordSerializer
 from django.utils import timezone
 import random
-from .utils import send_otp_email
+from .tasks import send_otp_email_task
 from clientProfiles.models import ClientProfile , ClientPhone
 
 # ✅ Register
@@ -25,7 +25,7 @@ class RegisterAPIView(APIView):
                 ClientPhone.objects.create(user=user, phone_number=user.prime_phone)
             # generate and send OTP
             otp = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            send_otp_email(user.email, otp.code)
+            send_otp_email_task.delay(user.email, otp.code, user.name, task="Account Verification")
             return Response({"message":"OTP sent. Verify to activate account."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,8 +60,10 @@ class ResendOTPAPIView(APIView):
             user = CustomUser.objects.get(email=email)
             if user.is_active:
                 return Response({"error":"Account already verified"}, status=status.HTTP_400_BAD_REQUEST)
+            otp_obj_delete= OTP.objects.filter(user=user)
+            otp_obj_delete.delete()
             otp_obj = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            send_otp_email(user.email, otp_obj.code)
+            send_otp_email_task.delay(user.email, otp_obj.code, user.name, task="Account Verification")
             return Response({"message":"OTP resent successfully"}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({"error":"User not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -128,7 +130,7 @@ class ForgetPasswordAPIView(APIView):
         try:
             user = CustomUser.objects.get(email=email)
             otp_obj = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            send_otp_email(user.email,otp_obj.code,user.name)
+            send_otp_email_task.delay(user.email,otp_obj.code,user.name)
             return Response({"message":"OTP sent to reset password"}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({"error":"User not found"}, status=status.HTTP_404_NOT_FOUND)
