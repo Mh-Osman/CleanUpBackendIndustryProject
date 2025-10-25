@@ -6,3 +6,4 @@ admin.site.register(SpecialServicesModel)
 admin.site.register(FeatureModel)
 
 admin.site.register(RatingModelForService)
+

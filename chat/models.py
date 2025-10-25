@@ -45,14 +45,17 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     
-    # গ্রুপ চ্যাটের জন্য (optional)
+    #(optional)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
     
-    # ব্যক্তিগত চ্যাটের জন্য (optional)
+   #i will delete this later
     one_to_one_chat = models.ForeignKey(OneToOneChat, on_delete=models.CASCADE, null=True, blank=True)
 
     is_pinned = models.BooleanField(default=False)
-
+    # image = models.ImageField(upload_to='chat/images/', null=True, blank=True)
+    # file = models.FileField(upload_to='chat/files/', null=True, blank=True)
+    image_url = models.URLField(max_length=500, null=True, blank=True)
+    file_url = models.URLField(max_length=500, null=True, blank=True)
     class Meta:
         ordering = ['timestamp'] # মেসেজগুলো সময় অনুযায়ী সাজানো থাকবে
 
@@ -76,7 +79,10 @@ class OneToOneChatmassage(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    # image = models.ImageField(upload_to='chat/images/private/', null=True, blank=True)
+    # file = models.FileField(upload_to='chat/files/private/', null=True, blank=True)
+    image_url = models.URLField(max_length=500, null=True, blank=True)
+    file_url = models.URLField(max_length=500, null=True, blank=True)
     class Meta:
         ordering = ['timestamp']
 

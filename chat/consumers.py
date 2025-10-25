@@ -684,34 +684,47 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def handle_send_message(self, content):
         message = content.get("message", "").strip()
-        if not message:
+        image_url = content.get("image_url")  # can be a file path or base64 string
+        file_url = content.get("file_url")    # same
+
+        # Validate: at least one content type
+        if not message and not image_url and not file_url:
             await self.send_json({"error": "Message cannot be empty"})
             return
 
-        # Check if group exists in DB
+        # Check group existence
         if not await self.group_exists(self.group_name):
             await self.send_json({"error": "Group does not exist"})
             return
-        # Save message to DB if needed (omitted here for brevity)
-        await self.save_message_to_db(message)
 
-        # Broadcast to the group
+        # Save message to DB
+        saved_message = await self.save_message_to_db(message, image_url, file_url)
+        if not saved_message:
+            await self.send_json({"error": "Failed to save message"})
+            return
+
         await self.channel_layer.group_send(
-            self.group_name,
-            {
-                "type": "chat_message",  # triggers chat_message method
-                "user": self.user.username,
-                "message": message,
-                 
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        )
+        self.group_name,
+        {
+            "type": "chat_message",
+            "user": self.user.username,
+            "message": message,
+            "image_url": image_url,
+            "file_url": file_url,
+            "timestamp": saved_message.timestamp.isoformat(),
+        }
+    )
+
+
+
 
     async def chat_message(self, event):
-        # Send message to WebSocket
+        # Send message to WebSocket clients
         await self.send_json({
             "sender_username": event["user"],
-            "message": event["message"],
+            "message": event.get("message"),
+            "image_url": event.get("image_url"),
+            "file_url": event.get("file_url"),
             "timestamp": event["timestamp"]
         })
     # -------------------------------
@@ -968,7 +981,9 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
             CoAdmin.objects.create(group=group, user=user)
             GroupMembership.objects.create(group=group, user=user)
         return group, created
-   
+    # ---------------------------
+    # Check if group exists
+    # ---------------------------
     @database_sync_to_async
     def group_exists(self, group_name):
         return Group.objects.filter(name=group_name).exists()
@@ -999,18 +1014,25 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
             return False
         
     @database_sync_to_async
-    def save_message_to_db(self, message_text):
+    def save_message_to_db(self, message_text, image_url=None, file_url=None):
+      
+
         try:
             group = Group.objects.get(name=self.group_name)
-            Message.objects.create(
+            msg = Message(
                 sender=self.user,
                 content=message_text,
-                group=group
+                group=group,
+                image_url=image_url,  # store the URL directly
+                file_url=file_url
             )
-            return True
+            msg.save()
+            return msg
         except Group.DoesNotExist:
-            return False
-
+            return None
+        except Exception as e:
+            print("Error saving message:", e)
+            return None
     # ---------------------------
     # Database-safe message loader
     # ---------------------------
@@ -1079,14 +1101,17 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
     # Action handlers
     # -------------------------------
 
-    async def handle_send_message(self, content):
+    async def handle_send_message(self, content, imaage_url=None, file_url=None):
         message = content.get("message", "").strip()
-        if not message:
+        image_url = content.get("image_url", "").strip()
+        file_url = content.get("file_url", "").strip()
+
+        if not message and not image_url and not file_url:
             await self.send_json({"error": "Message cannot be empty"})
             return
 
         # Save message to DB
-        await self.save_message_to_db(message)
+        saved_message = await self.save_message_to_db(message, image_url, file_url)
 
         # Broadcast to the group
         await self.channel_layer.group_send(
@@ -1095,7 +1120,9 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
                 "type": "chat_message",  # triggers chat_message method
                 "user": self.user.username,
                 "message": message,
-                "timestamp": datetime.utcnow().isoformat()
+                "image_url": image_url,
+                "file_url": file_url,
+                "timestamp": saved_message.timestamp.isoformat(),
             }
         )
 
@@ -1104,6 +1131,8 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             "sender_username": event["user"],
             "message": event["message"],
+            "image_url": event["image_url"],
+            "file_url": event["file_url"],
             "timestamp": event["timestamp"]
         })
 
@@ -1155,9 +1184,12 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
     def save_message_to_db(self, message_text):
         try:
             OneToOneChatmassage.objects.create(
+                chat = self.chat,
                 sender=self.user,
                 content=message_text,
-                one_to_one_chat=self.chat
+                image_url=image_url if image_url else None, 
+                file_url=file_url if file_url else None,
+               
             )
             return True
         except Exception:
@@ -1168,7 +1200,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
         from chat.models import OneToOneChatmassage  # ✅ import inside (safer for async)
         try:
             messages = (
-                OneToOneChatmassage.objects.filter(one_to_one_chat=self.chat)
+                OneToOneChatmassage.objects.filter(chat=self.chat)
                 .select_related("sender")  # performance optimization
                 .order_by('-timestamp')[offset:offset + limit]
             )
