@@ -130,17 +130,21 @@ def getallformswithsubmissionsanswers(request):
     }, status=status.HTTP_200_OK)
 
 
+
 from rest_framework import permissions
 from dynamicForm.serializers import FormNameSerializer, FormSubmissionSerializer
 class FormNameViewSet(viewsets.ModelViewSet):
     queryset = FormNameModel.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
     serializer_class = FormNameSerializer
-
+    def get_permissions(self):
+        if self.request.method in ["GET"]:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
 class FormSubmissionViewSet(viewsets.ModelViewSet):
     queryset = FormSubmissionModel.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = FormSubmissionSerializer
     search_fields = ['form__form_name', 'response_user__name', 'submitted_at']
     filterset_fields = ['form', 'response_user', 'submitted_at']
