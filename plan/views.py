@@ -51,18 +51,18 @@ class SubscriptionListCreateView(viewsets.ModelViewSet):
             #   next_payment_date=subscription.next_payment_date,
               end_date=subscription.current_period_end
               )
-        invoice=InvoiceModel.objects.create(
-            invoice_id=str(uuid.uuid4()),  # unique invoice ID
-            type="outgoing",
-            date_issued=subscription.start_date,
-            due_date=subscription.current_period_end,
-            client=subscription.user,
-            plan=subscription.plan,
-            note=f"{self.request.user.name} subscribed",
-            status="paid" if getattr(subscription, "payment_method", "prepaid") == "prepaid" else "unpaid",
-            total_amount=subscription.plan.amount,
-            building=subscription.building
-        )
+        # invoice=InvoiceModel.objects.create(
+        #     invoice_id=str(uuid.uuid4()),  # unique invoice ID
+        #     type="outgoing",
+        #     date_issued=subscription.start_date,
+        #     due_date=subscription.current_period_end,
+        #     client=subscription.user,
+        #     plan=subscription.plan,
+        #     note=f"{self.request.user.name} subscribed",
+        #     status="paid" if getattr(subscription, "payment_method", "prepaid") == "prepaid" else "unpaid",
+        #     total_amount=subscription.plan.amount,
+        #     building=subscription.building
+        # )
                
 
 
@@ -82,7 +82,7 @@ class SubscriptionSerializerView(generics.ListAPIView):
     queryset=Subscription.objects.all().order_by("-created_at")
     serializer_class=SubscribeSerializerDetails
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
-    filterset_fields = ['status','plan', 'user', 'building', 'region', 'apartment']
+    filterset_fields = ['id','status','plan', 'user', 'building', 'region', 'apartment']
     search_fields = ['status','plan__plan_code','plan__name','building__name','region__name','user__email']
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -91,6 +91,12 @@ class SubscriptionSerializerView(generics.ListAPIView):
              ).distinct()
 
         return self.queryset
+    def paginate_queryset(self, queryset):
+        
+        if self.request.user.user_type == 'client':
+            return None
+        
+        return super().paginate_queryset(queryset)
     
 
 # full subscription view
@@ -309,7 +315,7 @@ class InvoiceView(viewsets.ModelViewSet):
     serializer_class=InvoiceSerializer
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['status','type']
-    search_fields = ['invoice_id', 'client__name', 'vendor__name',"plan__plan_code","plan__name","plan__amount","building__name","type","date_issued","due_date","status"]
+    search_fields = ['invoice_id','client__email','client__name', 'vendor_name',"vendor__email","plan__plan_code","plan__name","plan__amount","building__name","type","date_issued","due_date","status"]
     def get_permissions(self):
         request=self.request.method
         if self.request.method in permissions.SAFE_METHODS:

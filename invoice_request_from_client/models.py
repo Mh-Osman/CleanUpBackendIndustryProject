@@ -20,5 +20,7 @@ class InvoiceRequestFromEmployee(models.Model):
     receipt=models.ImageField(blank=True,null=True)
     amount=models.IntegerField()
     status=models.CharField(choices=CHOICE_STATUS,default='Submitted')
+    created_at=models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    updated_at=models.DateTimeField(auto_now=True,blank=True,null=True)
 
 auditlog.register(InvoiceRequestFromEmployee)

@@ -44,7 +44,7 @@ from django.db.models import OuterRef, Subquery
 class ServiceDetailsListView(ListAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = ServiceDetailsSerializer
-    queryset = SpecialServicesModel.objects.all()
+    queryset = SpecialServicesModel.objects.all().order_by('-created_at')
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
     filterset_fields = ['service_code','status','auto_renew_enable','category','status'] 
     search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']

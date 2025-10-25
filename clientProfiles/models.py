@@ -1,3 +1,4 @@
+
 from django.db import models
 from django.forms import ValidationError
 #from locations.models import Region, Building, Apartment

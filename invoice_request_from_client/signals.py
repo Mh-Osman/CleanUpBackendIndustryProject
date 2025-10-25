@@ -17,7 +17,8 @@ def store_previous_status(sender, instance, **kwargs):
 @receiver(post_save, sender=InvoiceRequestFromEmployee)
 def create_invoice_on_approval(sender, instance, created, **kwargs):
     if not created:
-        if getattr(instance, "_previous_status", None) != "Approved" and instance.status == "Approved":
+
+        if (getattr(instance, "_previous_status", None) != "Approved" and instance.status == "Approved") or (getattr(instance, "_previous_status", None) != "Cancel" and instance.status == "Approved"):
             invoice = InvoiceModel.objects.create(
                 vendor=instance.vendor,
                 date_issued=instance.expense_date,

@@ -58,7 +58,20 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Apartment
-        fields = "__all__"
+        fields = [
+            'id',
+            'client',
+            
+            'building',
+            'apartment_number',
+            'floor',
+            'living_rooms',
+            'bathrooms',
+            'outdoor_area',
+            'postcode',
+            'location',
+            'building_id',   # if you are using write-only id field
+        ]
         read_only_fields = ['id']
         UniqueTogether = ('building', 'client', 'apartment_number')
     
@@ -198,3 +211,37 @@ class RegionDetailSerializer(serializers.ModelSerializer):
 
     def get_total_apartments(self, obj):
         return Apartment.objects.filter(building__region=obj).count()
+
+
+# class EmployeeInMapApartmentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Apartment
+#         fields = ['id', 'apartment_number', 'building', 'client', 'building_location']
+#         read_only_fields = "__all__"
+
+
+# class EmployeeInMapSerializer(serializers.ModelSerializer):
+#     buildings = BuildingSerializer(many=True, read_only=True)
+    
+#     class Meta:
+#         model = Region
+#         fields  =["id" , "name" ,"buildings" ]
+#         read_only_fields = ['id']
+# class EmployeeInMapSerializer1(serializers.ModelSerializer):
+#     Buildings = BuildingSerializer(many=True, read_only=True)
+#     region = RegionSerializer(source='building.region', read_only=True)
+    
+#     class Meta:
+#         model = Apartment
+#         fields = "__all__"
+#         read_only_fields = ['id']
+
+
+class EmployeeInMapSerializer(serializers.ModelSerializer):
+    
+    apartments = ApartmentSerializerForBuilding(many=True, read_only=True)
+    region = RegionSerializer(read_only=True) 
+    class Meta:
+        model = Building
+        fields = ["id", "name", "type", "city", "location", "latitude", "longitude", "region", "apartments"]
+        read_only_fields = ['id']

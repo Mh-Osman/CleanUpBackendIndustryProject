@@ -228,7 +228,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = InvoiceModel
         fields = [
             "id","invoice_id", "type", "date_issued", "due_date",
-            "client",'building',"apartments", "plan", "vendor", 
+            "client",'building',"apartments", "plan", "vendor",'vendor_name',
             "vendor_invoice_file", "note", "file",
             "line_items", "total_amount","status","building_name","apartment_name","region_name","client_name","plan_name","tax_percentage",'sub_total'
         ]

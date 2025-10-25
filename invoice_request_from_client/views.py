@@ -24,7 +24,7 @@ class OnlyEmployeeCanPost(permissions.BasePermission):
 from rest_framework import filters
 
 class InvoiceRequestFromEmployeeView(viewsets.ModelViewSet):
-    queryset=InvoiceRequestFromEmployee.objects.select_related('vendor')
+    queryset=InvoiceRequestFromEmployee.objects.select_related('vendor').order_by('-created_at')
     serializer_class=InvoiceRequestFromEmployeeSerializer
     
     filter_backends=[filters.SearchFilter,filters.OrderingFilter]
@@ -36,7 +36,7 @@ class InvoiceRequestFromEmployeeView(viewsets.ModelViewSet):
         user=self.request.user
         if not user.is_authenticated:
             return [permissions.IsAuthenticated()]
-        if self.request.method in ['GET','POST']:
+        if self.request.method in ['PATCH','GET','POST']:
             return [OnlyEmployeeCanPost()]
         return [permissions.IsAdminUser()]
     

@@ -5,7 +5,7 @@ from plan.models import Subscription
 @shared_task
 def auto_cancel_expired_subscriptions():
     today = timezone.now().date()
-    print("i am running")
+    # print("i am running")
 
     
     expired_subs = Subscription.objects.filter(current_period_end__lt=today,status='active')

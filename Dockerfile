@@ -20,10 +20,14 @@ COPY requirements.txt /app/
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install -r requirements.txt
 
+
+
 # Copy project files
 COPY . /app/
-
+# RUN python manage.py collectstatic --noinput
 # Expose the port your app runs on
+
+
 EXPOSE 8000
 
 # Run the Django development server

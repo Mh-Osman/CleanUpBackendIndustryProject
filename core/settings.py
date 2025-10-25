@@ -9,6 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
+# from cloudinary_storage.storage import RawMediaCloudinaryStorage, MediaCloudinaryStorage
+
 
 from pathlib import Path
 from decouple import config
@@ -25,7 +30,7 @@ SECRET_KEY = config("SECRET_KEY")
 STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", cast=bool)
+DEBUG=True
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -41,6 +46,7 @@ REST_FRAMEWORK = {
     
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+      # 'users.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -63,8 +69,27 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=480),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+
 }
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',  #
+    'django.middleware.security.SecurityMiddleware',
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
+]
 # Application definition
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -73,6 +98,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt',
@@ -87,13 +113,16 @@ INSTALLED_APPS = [
     'drf_yasg',
     # <<<<<<< gani
     'google_map',
-    'corsheaders',
+    
     "auditlog",
     'all_history',
 # <<<<<<< HEAD
     'debug_toolbar', #osman
     #'subscriptions', #osman
- 
+
+    'channels',
+    'chat',
+# =======
     
      
 
@@ -105,34 +134,35 @@ INSTALLED_APPS = [
     'rating',
 
     'employeedashboard',
+    #osman
+    'dynamicForm',
+
+    # 'cloudinary',
+    # 'cloudinary_storage',
+    'notifications',
 ]
-# for use celery 
+ 
 
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+#     'API_KEY': config('CLOUDINARY_API_KEY'),
+#     'API_SECRET': config('CLOUDINARY_API_SECRET'),
+# }
 
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+# # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Dhaka'
+CELERY_TIMEZONE = 'Asia/Riyadh'
 
 
 
-CORS_ALLOW_ALL_ORIGINS = True
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    "auditlog.middleware.AuditlogMiddleware",
-    'debug_toolbar.middleware.DebugToolbarMiddleware', #osman
-]
 
 INTERNAL_IPS = [ #osman
 
@@ -148,21 +178,42 @@ ALLOWED_HOSTS = [
     "127.0.0.1:6868",
     "127.0.0.1:4041",
     "10.10.13.61",
-    "10.10.13.75"
-
+    "10.10.13.75",
+    "10.10.13.86",
+    "overrigged-botanically-lila.ngrok-free.dev",
 ]
+
+
 CSRF_TRUSTED_ORIGINS = [
     "https://398bac921dd6.ngrok-free.app",
+    
    
 ]
-
 
 CSRF_TRUSTED_ORIGINS = [
-   
+   "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "https://*.ngrok-free.app",
-    "http://127.0.0.1:6868"
+    "http://127.0.0.1:6868",
+    "http://10.10.13.86:6868",
+     "https://overrigged-botanically-lila.ngrok-free.dev",
 ]
 
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://10.10.13.86:6868",
+    "https://*.ngrok-free.app",
+     "https://overrigged-botanically-lila.ngrok-free.dev",
+    
+]
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+# CORS_ALLOW_CREDENTIALS = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
@@ -180,24 +231,54 @@ TEMPLATES = [
     },
 ]
 
+#
+ASGI_APPLICATION = 'core.asgi.application'
 WSGI_APPLICATION = 'core.wsgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(config('REDIS_HOST', default='127.0.0.1'), config('REDIS_PORT', default=6380))],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
+ENV = config("DJANGO_ENV", default="development")
 
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / config("DATABASE_NAME"),
-        "OPTIONS": {
-            "timeout": 20,  # wait 20 seconds if DB locked
-        },
+if ENV == "development":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB"),
+            "USER": config("POSTGRES_USER"),
+            "PASSWORD": config("POSTGRES_PASSWORD"),
+            "HOST": config("POSTGRES_HOST", default="db"),
+            "PORT": config("POSTGRES_PORT", default="5432"),
+        }
+    }
+
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / config("DATABASE_NAME"),
+#         "OPTIONS": {
+#             "timeout": 20,  # wait 20 seconds if DB locked
+#         },
+#     }
+# }
 
 
 # Password validation
@@ -234,7 +315,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
