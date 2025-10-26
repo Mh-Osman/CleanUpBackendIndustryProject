@@ -1,7 +1,7 @@
 from django.urls import path,include
 
 from rest_framework.routers import DefaultRouter
-from .views import PlanView,PauseSubscription,ResumeSubscription,StopSubscription,SubscriptionSerializerView,SubcriptionFullStatusDetailView,InvoiceView,CalculationsForInvoiceView,SubscriptionListCreateView
+from .views import PlanView,PauseSubscription,ResumeSubscription,StopSubscription,SubscriptionSerializerView,SubcriptionFullStatusDetailView,InvoiceView,CalculationsForInvoiceView,SubscriptionListCreateView,ServiceLineItemView
 # from .webhooks import stripe_webhook
 
 router =DefaultRouter()
@@ -12,6 +12,7 @@ router.register('invoice/list',InvoiceView)
 
 router.register('invoice/list',InvoiceView,basename='invoice')
 router.register('subscriptions-create',SubscriptionListCreateView,basename='subscription-create')
+router.register('service-line-items',ServiceLineItemView,basename='service-line-items')
 #>>>>>>> origin/new-testing
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path("subscription/",SubscriptionSerializerView.as_view()),
     path('subscription/status_details/',SubcriptionFullStatusDetailView.as_view()),
     path('calculations/',CalculationsForInvoiceView.as_view()),
+    
     
     
 ]

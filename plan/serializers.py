@@ -12,7 +12,7 @@ from rest_framework.response import Response
 class ServiceLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceLineItem
-        fields = ["name","description","quantity","unit_price"]
+        fields = ["id","name","description","quantity","unit_price"]
 
 class PlanSerailzier(serializers.ModelSerializer):
     #salah uddin

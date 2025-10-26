@@ -25,7 +25,7 @@ SECRET_KEY = config("SECRET_KEY")
 STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET=config('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", cast=bool)
+DEBUG = config("DEBUG")
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
