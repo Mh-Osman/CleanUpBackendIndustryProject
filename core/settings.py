@@ -189,6 +189,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.10.13.86:6868",
     "https://*.ngrok-free.app",
      "https://overrigged-botanically-lila.ngrok-free.dev",
+     "https://checkall.org",
+     "https://www.checkall.org"
     
 ]
 CSRF_COOKIE_SECURE = False

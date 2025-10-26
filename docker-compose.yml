@@ -92,21 +92,50 @@ services:
     restart: always
     networks:
       - cleanup_network
-  nginx:
-    image: nginx:alpine
-    container_name: cleanup_nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_files:/app/staticfiles
-      - media_files:/app/media
-    depends_on:
-      web:
-        condition: service_started
-    restart: always
-    networks:
-      - cleanup_network
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: cleanup_nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  #     - static_files:/app/staticfiles
+  #     - media_files:/app/media
+  #   depends_on:
+  #     web:
+  #       condition: service_started
+  #   restart: always
+  #   networks:
+  #     - cleanup_network
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: cleanup_nginx
+  #   ports:
+  #     - "81:80"
+  #     - "443:443" # <-- add HTTPS port
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  #     - static_files:/app/staticfiles
+  #     - media_files:/app/media
+  #     - ./certbot/conf:/etc/letsencrypt # <-- SSL certificates
+  #     - ./certbot/www:/var/www/certbot # <-- webroot for validation
+  #   depends_on:
+  #     web:
+  #       condition: service_started
+  #   restart: always
+  #   networks:
+  #     - cleanup_network
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: cleanup_certbot
+  #   volumes:
+  #     - ./certbot/conf:/etc/letsencrypt
+  #     - ./certbot/www:/var/www/certbot
+  #   entrypoint: >
+  #     sh -c "trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew --webroot -w /var/www/certbot --quiet; done"
+  #   restart: always
+  #   networks:
+  #     - cleanup_network
 
 volumes:
   postgres_data:
