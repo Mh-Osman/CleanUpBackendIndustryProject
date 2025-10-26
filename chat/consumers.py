@@ -497,30 +497,32 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
               await self.close()
               return
        
-        self.friend_username = self.scope["url_route"]["kwargs"]["friend_username"]
-        self.friend_user = await self.get_user(self.friend_username)
- 
-        # Get friend username from URL
-        self.friend_username = self.scope["url_route"]["kwargs"].get("friend_username")
-        if not self.friend_username:
+        #self.friend_username = self.scope["url_route"]["kwargs"]["friend_username"]
+        #self.friend_user = await self.get_user(self.friend_username)
+        
+        # Get friend email from URL
+        self.friend_email = self.scope["url_route"]["kwargs"].get("friend_email")
+        if not self.friend_email:
             await self.close()
             return
 
-        self.friend_user = await self.get_user(self.friend_username)
+        self.friend_user = await self.get_user(self.friend_email)
         if not self.friend_user:
             await self.close()
             return
        # create or get chat
         self.chat = await self.get_or_create_private_chat(self.user, self.friend_user)
-
+        self.room_name = f"private_chat_{self.chat.id}"
         # join the room
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.accept()
 
-        await self.send_json({"status": "connected", "chat_with": self.friend_username, "chat_id": self.chat.id })
+        await self.send_json({"status": "connected", "chat_with": self.friend_user.email, "chat_id": self.chat.id })
 
     async def disconnect(self, code):
-        await self.channel_layer.group_discard(self.room_name, self.channel_name)
+        #await self.channel_layer.group_discard(self.room_name, self.channel_name)
+        if hasattr(self, "room_name") and self.channel_layer is not None:
+            await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
     
     async def receive_json(self, content):
@@ -555,7 +557,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
             self.room_name,
             {
                 "type": "chat_message",  # triggers chat_message method
-                "user": self.user.username,
+                "user": self.user.email,
                 "message": message,
                 "image_url": image_url,
                 "file_url": file_url,
@@ -566,7 +568,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
     async def chat_message(self, event):
         # Send message to WebSocket
         await self.send_json({
-            "sender_username": event["user"],
+            "sender_email": event["user"],
             "message": event["message"],
             "image_url": event["image_url"],
             "file_url": event["file_url"],
@@ -583,7 +585,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
         message_list = [
             {
                 "id": msg.id,
-                "sender": msg.sender.username,
+                "sender": msg.sender.email,
                 "content": msg.content,
 
                 "timestamp": timezone.localtime(msg.timestamp).isoformat(),
@@ -602,10 +604,10 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
 
     # Database helpers
     @database_sync_to_async
-    def get_user(self, username):
+    def get_user(self, email):
         
         try:
-            return User.objects.get(username=username)
+            return User.objects.get(email=email)
         except User.DoesNotExist:
             return None
         
@@ -615,7 +617,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
             user1=min(user1, user2, key=lambda u: u.id),
             user2=max(user1, user2, key=lambda u: u.id)
         )
-        self.room_name = f"private_chat_{chat.id}"
+       # self.room_name = f"private_chat_{chat.id}"
         return chat
         
     @database_sync_to_async

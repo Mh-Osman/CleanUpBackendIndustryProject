@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     # 'cloudinary',
     # 'cloudinary_storage',
     'notifications',
+    'rest_framework_simplejwt.token_blacklist',
 ]
  
 

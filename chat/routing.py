@@ -15,7 +15,7 @@ websocket_urlpatterns = [
     # One-to-One Chat WebSocket Route
     # -----------------------------
     re_path(
-        r"ws/chat/one-to-one/(?P<friend_username>\w+)/$",  # e.g. ws://localhost:8000/ws/chat/one-to-one/john/
+        r"ws/chat/one-to-one/(?P<friend_email>[^/]+)/$",
         consumers.OneToOneChatConsumer.as_asgi(),
         name="one_to_one_chat_socket"
     ),

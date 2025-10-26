@@ -90,6 +90,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 import random
 from django.utils import timezone
 from datetime import timedelta
+from django.utils.text import slugify
 
 # ----------------------------
 # Custom User Manager
@@ -133,16 +134,23 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(name, email, prime_phone, password, user_type='admin', **extra_fields)
 
-    def generate_unique_username(self, name):
+    def generate_unique_username(self, email):
         """
-        Generate a unique username using the name + random 10-digit number.
+        Generate a unique username using the part before '@' in the email.
+        If it already exists, append a random 4-digit number.
         """
-        for _ in range(10):  # try 10 times
-            username_candidate = f"{name.lower()}{random.randint(1000000000, 9999999999)}"
+        base_username = email.split('@')[0]
+        base_username = slugify(base_username)  # make sure it’s URL/username-safe
+
+        # Try to find a unique username
+        for _ in range(10):
+            # Only add random numbers if needed
+            username_candidate = f"{base_username}{random.randint(1000, 9999)}" if CustomUser.objects.filter(username=base_username).exists() else base_username
+
             if not CustomUser.objects.filter(username=username_candidate).exists():
                 return username_candidate
-        raise ValueError("Unable to generate a unique username. Try again.")
 
+        raise ValueError("Unable to generate a unique username. Try again.")
 # ----------------------------
 # Custom User Model
 # ----------------------------
@@ -174,7 +182,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         # Auto-generate username if not provided
         if not self.username:
-            self.username = CustomUserManager().generate_unique_username(self.name)
+            self.username = CustomUserManager().generate_unique_username(self.email)
             if self.user_type == 'admin':
                 
                 self.is_superuser = True
