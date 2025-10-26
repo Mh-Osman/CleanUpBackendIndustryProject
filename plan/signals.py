@@ -25,7 +25,8 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
             building=instance.building,
             client=instance.user,
             plan=instance.plan,
-            total_amount=instance.plan.amount
+            total_amount=instance.plan.amount,
+            note=f"Subscription created for {instance.user.email}",
         )
         # invoice=InvoiceModel.objects.create(
         #     invoice_id=str(uuid.uuid4()),  # unique invoice ID
