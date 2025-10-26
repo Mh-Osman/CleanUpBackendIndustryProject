@@ -163,11 +163,14 @@ ALLOWED_HOSTS = [
     "10.10.13.75",
     "10.10.13.86",
     "overrigged-botanically-lila.ngrok-free.dev",
+    "api.checkall.org",
 ]
 
 
 CSRF_TRUSTED_ORIGINS = [
     "https://398bac921dd6.ngrok-free.app",
+    "https://api.checkall.org",
+    "http://api.checkall.org/",
     
    
 ]
@@ -179,6 +182,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:6868",
     "http://10.10.13.86:6868",
      "https://overrigged-botanically-lila.ngrok-free.dev",
+     "https://api.checkall.org",
+     "http://api.checkall.org",
 ]
 
 CSRF_COOKIE_SECURE = False
