@@ -19,8 +19,8 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
     queryset = SpecialServicesModel.objects.all().order_by('-created_at')
     serializer_class = SpecialServicesModelSerializer
     filter_backends = [DjangoFilterBackend,filters.SearchFilter]
-    filterset_fields = ['service_code','status','auto_renew_enable','category','status'] 
-    search_fields = ['service_code', 'name', 'category','status','auto_renew_enable']
+    filterset_fields = ['service_code','status','auto_renew_enable','category','status', ] 
+    search_fields = ['service_code', 'name', 'category','status','auto_renew_enable',]
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:

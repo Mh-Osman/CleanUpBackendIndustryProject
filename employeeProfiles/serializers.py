@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+
 from .models import EmployeeProfile, EmployeeSalary #Attendance,EmployeeApartmentAssignment
 from users.models import CustomUser
 # from invoice_request_from_client.models import InvoiceRequestFromEmployee
@@ -148,3 +150,18 @@ class SupervisorsListSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'username', 'email', 'user_type', 'prime_phone', 'last_login', 'employee_profile']
         extra_kwargs = {'password': {'write_only': True}}
 
+
+#employee dashboard building page serializer
+# from plan.models import Subscription 
+# from  assign_task_employee.models import SpecialServicesModel    
+# class subscriptionSerializer(serializers.ModelSerializer):
+
+#     building = serializers.StringRelatedField(source='building.name', read_only=True)
+#     apartment =serializers.StringRelatedField(source='apartment.apartment_number', read_only=True)
+#     client =serializers.StringRelatedField(source='user.name', read_only=True)
+#     location =serializers.StringRelatedField(source='building.location', read_only=True)
+
+#     class Meta:
+#         model = Subscription
+#         fields = ['id', 'subscription_type', 'status', 'start_date', 'end_date', 'building', 'apartment', 'client', 'location']
+     

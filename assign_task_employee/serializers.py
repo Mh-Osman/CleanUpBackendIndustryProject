@@ -19,8 +19,10 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
     region_name=serializers.CharField(source='building.region.name',read_only=True)
     active=serializers.SerializerMethodField(read_only=True)
     aprtment_number=serializers.SerializerMethodField(read_only=True)
-    client_name=serializers.SerializerMethodField(read_only=True)
-    
+    client_username=serializers.SerializerMethodField(read_only=True)
+    building_location=serializers.CharField(source='building.location',read_only=True)
+    worker_name = serializers.CharField(source='worker.name', read_only=True)
+    worker_username = serializers.CharField(source='worker.username', read_only=True)
     class Meta:
         model = SpecialServicesModel
         fields = [
@@ -36,6 +38,8 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
             "building",
             "auto_renew_enable",
             "worker",
+            "worker_name",
+            "worker_username",
             "created_at",
             "updated_at",
             "service_icon",
@@ -48,9 +52,10 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
             'region',
             'discounted_price',
             "building_name",
+            "building_location",
             "region_name",
             "active",
-            "client_name",
+            "client_username",
             "aprtment_number",
             "created_at",
         ]
@@ -66,8 +71,8 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
     
     def get_aprtment_number(self, obj):
         return [apartment.apartment_number for apartment in obj.apartment.all()]
-    def get_client_name(self, obj):
-        return [apartment.client.name if apartment.client else "unknown" for apartment in obj.apartment.all()]
+    def get_client_username(self, obj):
+        return [apartment.client.username if apartment.client else "unknown" for apartment in obj.apartment.all()]
     
    
     

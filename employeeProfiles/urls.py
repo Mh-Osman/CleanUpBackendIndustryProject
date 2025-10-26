@@ -11,4 +11,5 @@ router.register(r'supervisors',SupervisorsListViewSet, basename='supervisor')
 urlpatterns = [
    path('', include(router.urls)),
    path('overview/',EmployeeOverviewViewset.as_view()),
+ #  path('employee/building_page/', EmployeeDashboardBuildingPafeView.as_view()),
 ]

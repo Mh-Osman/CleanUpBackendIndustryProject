@@ -135,7 +135,7 @@ class EmployeeOverviewViewset(APIView):
 
 
 
-# #osman provided the view below
+# # #osman provided the view below
 
 # from locations.models import CustomUser, Region, Building, Apartment
 # from assign_task_employee.models import SpecialServicesModel
@@ -151,39 +151,35 @@ class EmployeeOverviewViewset(APIView):
 #         - Services with status 'pending' or 'started'
 #     Includes the status of subscription/service.
 #     """
-# <<<<<<< HEAD
-   
-#     permission_classes = [IsAuthenticated]
-# =======
+
 #     #permission_classes = [IsAdminUser]
-# >>>>>>> origin/main
 
 #     permission_classes = [IsAuthenticated]
     
 
-# <<<<<<< HEAD
+
  
-#     def list(self, request):
-#         data = {}
+#     # def list(self, request):
+#     #     data = {}
  
-#         # Filter active subscriptions and relevant services
-#         active_subscriptions = Subscription.objects.filter(status='active')
-#         active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
+#     #     # Filter active subscriptions and relevant services
+#     #     active_subscriptions = Subscription.objects.filter(status='active')
+#     #     active_services = SpecialServicesModel.objects.filter(status__in=['pending', 'started'])
  
-#         # Get regions involved in either active subscriptions or services
-#         region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
-#                      set(active_services.values_list('region_id', flat=True))
+#     #     # Get regions involved in either active subscriptions or services
+#     #     region_ids = set(active_subscriptions.values_list('region_id', flat=True)) | \
+#     #                  set(active_services.values_list('region_id', flat=True))
  
-#         regions = Region.objects.filter(id__in=region_ids)
+#     #     regions = Region.objects.filter(id__in=region_ids)
  
-#         for region in regions:
-#             region_dict = {}
-#             buildings = Building.objects.filter(region=region)
+#     #     for region in regions:
+#     #         region_dict = {}
+#     #         buildings = Building.objects.filter(region=region)
  
-#             for building in buildings:
-#                 apartments_list = []
+#     #         for building in buildings:
+#     #             apartments_list = []
  
-# =======
+
 #     def list(self, request):
 #         data = {}
 
@@ -208,7 +204,6 @@ class EmployeeOverviewViewset(APIView):
 #             for building in buildings:
 #                 apartments_list = []
 
-# >>>>>>> origin/main
 #                 # 1️⃣ Apartments with active subscriptions
 #                 sub_apartments = Apartment.objects.filter(
 #                     subscription__in=active_subscriptions.filter(building=building)
@@ -265,3 +260,57 @@ class SupervisorsListViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
+# #employee dashboard page 1
+# from plan.models import Subscription
+# from assign_task_employee.models import SpecialServicesModel
+
+# class EmployeeDashboardBuildingPafeView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+#         user = request.user
+#         obj1 = Subscription.objects.filter(employee=user)
+        
+#         building_dict = {}
+#         for sub in obj1:
+#             building = sub.building
+#             building_dict["building_id"] = building.id
+#             building_dict["building_name"] = building.name
+#             building_dict["building_location"] = building.location
+#             building_dict["building_type"] = building.type
+#             building_dict["region"] = building.region.name
+#             building_dict["apartment"] = {
+#                 "apartment_number": sub.apartment.apartment_number,
+#                 "client": sub.user.name,
+#                 "status": sub.status
+#             }
+
+        
+#         obj2 = SpecialServicesModel.objects.filter(employee=user)
+        
+#         for service in obj2:
+
+
+#         return Response(building_dict)
+    
+    
+
+# class SpecialServicesViewSet(viewsets.ModelViewSet):
+#     queryset = SpecialServicesModel.objects.all()
+#     serializer_class = None  # Define appropriate serializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         return SpecialServicesModel.objects.filter(employee=user)
+    
+# class subscriptionViewset(viewsets.ModelViewSet):
+#     queryset = Subscription.objects.all()
+#     serializer_class = None  # Define appropriate serializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         return Subscription.objects.filter(employee=user)
+    
+# ``

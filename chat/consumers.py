@@ -517,7 +517,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.accept()
 
-        await self.send_json({"status": "connected", "chat_with": self.friend_username})
+        await self.send_json({"status": "connected", "chat_with": self.friend_username, "chat_id": self.chat.id })
 
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
@@ -585,6 +585,7 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
                 "id": msg.id,
                 "sender": msg.sender.username,
                 "content": msg.content,
+
                 "timestamp": timezone.localtime(msg.timestamp).isoformat(),
             }
             for msg in messages

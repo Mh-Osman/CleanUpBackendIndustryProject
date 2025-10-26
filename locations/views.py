@@ -68,12 +68,14 @@ def location_overview(request):
         Apartment.objects.count() - total_active_apartments
     )
 
+    total_region = Region.objects.count()
 
     return Response({
         "total_buildings": total_buildings,
         "total_apartments": total_apartments,
         "total_active_apartments": total_active_apartments,
-        "total_inactive_apartments": total_inactive_apartments
+        "total_inactive_apartments": total_inactive_apartments,
+        "total_region": total_region
     })
 
 
@@ -204,4 +206,5 @@ class EmployeeInMapViewset(viewsets.ViewSet):
 
         serializer = EmployeeInMapSerializer(buildings, many=True, context={'user': user})
         return Response(serializer.data)
+
 
