@@ -23,10 +23,10 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Create folder for static files
-RUN mkdir -p /app/staticfiles
+# RUN mkdir -p /app/staticfiles
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+# RUN python manage.py collectstatic --noinput
 
 # Command to run Gunicorn with Uvicorn workers
-CMD ["gunicorn", "Talkfusion.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080", "--workers", "4"]
+CMD ["gunicorn", "Talkfusion.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4"]
