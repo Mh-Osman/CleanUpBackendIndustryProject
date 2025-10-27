@@ -36,7 +36,7 @@ class BuildingViewSet(viewsets.ModelViewSet):
     search_fields = ['name','region__name','location']
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([permissions.IsAuthenticated])
 def BuilgingByRegionIdList(request, region_id):
     buildings = Building.objects.filter(region__id=region_id).prefetch_related('apartments','region')
     serializer = BuildingSerializer(buildings, many=True)

@@ -17,6 +17,9 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
     # building=BuildingSerializer(read_only=True)
     building_name=serializers.CharField(source='building.name',read_only=True)
     region_name=serializers.CharField(source='building.region.name',read_only=True)
+    building_location=serializers.CharField(source='building.location',read_only=True)
+    building_latitude=serializers.CharField(source='building.latitude',read_only=True)
+    building_longitude=serializers.CharField(source='building.longitude',read_only=True)
     active=serializers.SerializerMethodField(read_only=True)
     aprtment_number=serializers.SerializerMethodField(read_only=True)
     client_username=serializers.SerializerMethodField(read_only=True)
@@ -53,6 +56,8 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
             'discounted_price',
             "building_name",
             "building_location",
+            "building_latitude",
+            "building_longitude",
             "region_name",
             "active",
             "client_username",
