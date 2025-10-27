@@ -12,7 +12,7 @@ from rest_framework.response import Response
 class ServiceLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceLineItem
-        fields = ["name","description","quantity","unit_price"]
+        fields = ["id","name","description","quantity","unit_price"]
 
 class PlanSerailzier(serializers.ModelSerializer):
     #salah uddin
@@ -46,6 +46,24 @@ class PlanSerailzier(serializers.ModelSerializer):
 
   
         return plan
+    def update(self, instance, validated_data):
+        service_line_items = validated_data.pop('service_line_items', None)
+
+        # Update plan fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Handle nested service line items update
+        if service_line_items is not None:
+            # Delete old items
+            instance.service_line_items.all().delete()
+
+            # Recreate new ones
+            for item in service_line_items:
+                ServiceLineItem.objects.create(plan=instance, **item)
+
+        return instance
             
 
  

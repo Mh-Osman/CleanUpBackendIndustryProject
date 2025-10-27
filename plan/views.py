@@ -347,3 +347,12 @@ class CalculationsForInvoiceView(APIView):
             "paid":paid,
             "unpaid":unpaid,
         })
+
+
+
+from .models import ServiceLineItem
+from .serializers import ServiceLineItemSerializer
+class ServiceLineItemView(viewsets.ModelViewSet):
+    queryset=ServiceLineItem.objects.all()
+    serializer_class=ServiceLineItemSerializer
+    permission_classes=[permissions.IsAdminUser]
