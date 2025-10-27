@@ -243,11 +243,20 @@ TEMPLATES = [
 ASGI_APPLICATION = 'core.asgi.application'
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [(config('REDIS_HOST', default='127.0.0.1'), config('REDIS_PORT', default=6380))],
+#         },
+#     },
+# }
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [(config('REDIS_HOST', default='127.0.0.1'), config('REDIS_PORT', default=6380))],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)]
+            # "hosts": [(config("REDIS_HOST", default="redis"), int(config("REDIS_PORT", default=6379)))],
         },
     },
 }

@@ -2,11 +2,10 @@
 FROM python:3.12-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-
-# Set working directory
+# Set workdir
 WORKDIR /app
 
 # Install system dependencies
@@ -15,21 +14,19 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip setuptools wheel
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+# Copy project
+COPY . .
 
+# Create folder for static files
+RUN mkdir -p /app/staticfiles
 
-# Copy project files
-COPY . /app/
-# RUN python manage.py collectstatic --noinput
-# Expose the port your app runs on
+# Collect static files
+RUN python manage.py collectstatic --noinput
 
-
-EXPOSE 8000
-
-# Run the Django development server
-# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-CMD ["gunicorn","--workers","3","--bind","0.0.0.0:8000","core.wsgi:application"]
+# Command to run Gunicorn with Uvicorn workers
+CMD ["gunicorn", "Talkfusion.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080", "--workers", "4"]
