@@ -10,6 +10,8 @@ from django.utils import timezone
 import random
 from .tasks import send_otp_email_task
 from clientProfiles.models import ClientProfile , ClientPhone
+from django.conf import settings
+from .utils import get_avatar_url, send_otp_email
 
 # ✅ Register
 class RegisterAPIView(APIView):
@@ -84,10 +86,13 @@ class LoginAPIView(APIView):
             refresh = RefreshToken.for_user(user)
             user.last_login = timezone.now()
             user.save()
+            user_data = UserSerializer(user).data
+            user_data['avatar_url'] = get_avatar_url(user)
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
-                "user": UserSerializer(user).data
+                "user": user_data,
+                "message": "Login successful"
             }, status=status.HTTP_200_OK)
             # refresh = RefreshToken.for_user(user)
             # access_token = str(refresh.access_token)

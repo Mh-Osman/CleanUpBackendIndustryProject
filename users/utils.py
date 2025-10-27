@@ -2,6 +2,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from smtplib import SMTPRecipientsRefused
 from django.core.mail import BadHeaderError
+from clientProfiles.models import ClientProfile
+from employeeProfiles.models import EmployeeProfile
+from admin_dashboard.models import AdminProfileModel
+from users.models import CustomUser
 
 def send_otp_email(email, otp, user="User", task="Account Verification"):
     subject = "Your OTP Code"
@@ -49,3 +53,24 @@ def send_otp_email(email, otp, user="User", task="Account Verification"):
         print("⚠️ Invalid header found.")
     except Exception as e:
         print(f"⚠️ Unexpected email sending error: {e}")
+
+from clientProfiles.models import ClientProfile
+from employeeProfiles.models import EmployeeProfile
+from admin_dashboard.models import AdminProfileModel
+from users.models import CustomUser
+
+def get_avatar_url(user):
+    profile = None
+
+    if user.user_type == 'client':
+        profile = getattr(user, 'client_profile', None)  # use related_name
+    elif user.user_type in ['worker', 'supervisor']:
+        profile = getattr(user, 'employee_profile', None)
+    elif user.user_type == 'admin':
+        profile = getattr(user, 'admin_profile', None)
+
+    if profile and profile.avatar:
+        return profile.avatar.url
+
+    return None
+

@@ -69,18 +69,20 @@ class ClientSerializer(serializers.ModelSerializer):
 
         # update main user fields
         instance = super().update(instance, validated_data)
+        print("Updated instance:", profile_data)
+          # Update or create client profile
+        if profile_data is not None:
+            profile, _ = ClientProfile.objects.get_or_create(user=instance)
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            profile.save()
+            instance.client_profile = profile
+            instance.save()
 
-        # update or create profile
-        if profile_data:
-            profile, created = ClientProfile.objects.get_or_create(user=instance)
-            # Use serializer for validation
-            profile_serializer = ClientProfileSerializer(profile, data=profile_data, partial=True)
-            profile_serializer.is_valid(raise_exception=True)
-            profile_serializer.save()
 
         # update extra phones dont allow update, only replace all
      
-
+     
         return instance
 
     # ---------------- Field validation ----------------
