@@ -153,7 +153,7 @@ INSTALLED_APPS = [
 # # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-# CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
 
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_ACCEPT_CONTENT = ['json']
