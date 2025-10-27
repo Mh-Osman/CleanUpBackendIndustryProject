@@ -133,10 +133,18 @@ def getallformswithsubmissionsanswers(request):
 
 from rest_framework import permissions
 from dynamicForm.serializers import FormNameSerializer, FormSubmissionSerializer
+from rest_framework import generics, filters
+
 class FormNameViewSet(viewsets.ModelViewSet):
     queryset = FormNameModel.objects.all()
     # permission_classes = [permissions.IsAdminUser]
     serializer_class = FormNameSerializer
+    ordering_fields = ['-created_at']
+    ordering = ['-created_at']  # default ordering
+    search_fields = ['form_name']
+   # filter_backends = [permissions.DjangoFilterBackend, permissions.SearchFilter]
+   # filterset_fields = ['admin', 'created_at', "form_name"]
+    #filterset_fields = ['admin']
     def get_permissions(self):
         if self.request.method in ["GET"]:
             return [permissions.IsAuthenticated()]
@@ -148,6 +156,8 @@ class FormSubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = FormSubmissionSerializer
     search_fields = ['form__form_name', 'response_user__name', 'submitted_at']
     filterset_fields = ['form', 'response_user', 'submitted_at']
+    ordering_fields = ['-submitted_at']
+    ordering = ['-submitted_at']  # default ordering
 
 
 

@@ -5,6 +5,7 @@ user = get_user_model()
 class FormNameModel(models.Model):
     form_name = models.CharField(max_length=200)
     admin = models.ForeignKey(user, on_delete=models.CASCADE, limit_choices_to={'is_staff': True})
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.form_name} created by {self.admin.username}"

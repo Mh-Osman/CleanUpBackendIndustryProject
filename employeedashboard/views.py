@@ -52,7 +52,7 @@ class SupervisorFormViewSet(viewsets.ModelViewSet):
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['supervisor__name', 'employee__name', 'report_date', 'performance']
-    search_fields = ['supervisor__name', 'employee__name', 'work_summary', 'supervisor_comments', 'issues_reported']
+    search_fields = ['supervisor__name', 'employee__name', 'work_summary', 'supervisor_comments', 'issues_reported', 'performance']
     ordering_fields = ['report_date', 'last_updated', 'created_at']
 
 from rest_framework.decorators import api_view, permission_classes
