@@ -154,7 +154,7 @@ class FormSubmissionViewSet(viewsets.ModelViewSet):
     queryset = FormSubmissionModel.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FormSubmissionSerializer
-    search_fields = ['form__form_name', 'response_user__name', 'submitted_at']
+    search_fields = ['form__form_name', 'response_user__name', 'submitted_at',]
     filterset_fields = ['form', 'response_user', 'submitted_at']
     ordering_fields = ['-submitted_at']
     ordering = ['-submitted_at']  # default ordering

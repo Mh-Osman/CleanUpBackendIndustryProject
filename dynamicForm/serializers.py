@@ -70,7 +70,8 @@ from .models import FormSubmissionModel
 class FormSubmissionSerializer(serializers.ModelSerializer):
     form_name = serializers.ReadOnlyField(source='form.form_name')
     response_user_name = serializers.ReadOnlyField(source='response_user.name')  # <-- correct field
+    response_user_email = serializers.ReadOnlyField(source='response_user.email')  # <-- correct field
 
     class Meta:
         model = FormSubmissionModel
-        fields = ['id', 'form', 'form_name', 'response_user', 'response_user_name', 'data', 'submitted_at']
+        fields = ['id', 'form', 'form_name', 'response_user', 'response_user_name', 'response_user_email', 'data', 'submitted_at']
