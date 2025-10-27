@@ -76,7 +76,7 @@ CORS_ALLOW_CREDENTIALS = True
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-     'whitenoise.middleware.WhiteNoiseMiddleware',  #
+     #'whitenoise.middleware.WhiteNoiseMiddleware',  #
     'django.middleware.security.SecurityMiddleware',
     # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',

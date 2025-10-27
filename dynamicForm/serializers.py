@@ -71,7 +71,7 @@ class FormSubmissionSerializer(serializers.ModelSerializer):
     form_name = serializers.ReadOnlyField(source='form.form_name')
     response_user_name = serializers.ReadOnlyField(source='response_user.name')  # <-- correct field
     response_user_email = serializers.ReadOnlyField(source='response_user.email')  # <-- correct field
-
+    response_user_prime_phone = serializers.ReadOnlyField(source='response_user.prime_phone')  # <-- correct field
     class Meta:
         model = FormSubmissionModel
-        fields = ['id', 'form', 'form_name', 'response_user', 'response_user_name', 'response_user_email', 'data', 'submitted_at']
+        fields = ['id', 'form', 'form_name', 'response_user', 'response_user_name', 'response_user_email', 'response_user_prime_phone', 'data', 'submitted_at']
