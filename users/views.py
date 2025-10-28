@@ -28,7 +28,7 @@ class RegisterAPIView(APIView):
                 ClientPhone.objects.create(user=user, phone_number=user.prime_phone)
             # generate and send OTP
             otp = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            #end_otp_email_task.delay(user.email, otp.code, user.name, task="Account Verification")
+            send_otp_email_task.delay(user.email, otp.code, user.name, task="Account Verification")
             return Response({"message":"OTP sent. Verify to activate account."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
