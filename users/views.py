@@ -12,6 +12,7 @@ from .tasks import send_otp_email_task
 from clientProfiles.models import ClientProfile , ClientPhone
 from django.conf import settings
 from .utils import get_avatar_url, send_otp_email
+from users.models import CustomUser
 
 # ✅ Register
 class RegisterAPIView(APIView):
@@ -27,7 +28,7 @@ class RegisterAPIView(APIView):
                 ClientPhone.objects.create(user=user, phone_number=user.prime_phone)
             # generate and send OTP
             otp = OTP.objects.create(user=user, code=random.randint(1000,9999))
-            send_otp_email_task.delay(user.email, otp.code, user.name, task="Account Verification")
+            #end_otp_email_task.delay(user.email, otp.code, user.name, task="Account Verification")
             return Response({"message":"OTP sent. Verify to activate account."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -78,8 +79,10 @@ class LoginAPIView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+
         user = authenticate(request, email=email, password=password)
-        print(user)
+        print(CustomUser.objects.filter(email=email))
+       #print(user)
         if user:
             if not user.is_active:
                 return Response({"error":"Account not verified"}, status=status.HTTP_403_FORBIDDEN)

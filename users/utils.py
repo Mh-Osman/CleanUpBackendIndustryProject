@@ -64,7 +64,7 @@ def get_avatar_url(user):
 
     if user.user_type == 'client':
         profile = getattr(user, 'client_profile', None)  # use related_name
-    elif user.user_type in ['worker', 'supervisor']:
+    elif user.user_type in ['employee', 'supervisor']:
         profile = getattr(user, 'employee_profile', None)
     elif user.user_type == 'admin':
         profile = getattr(user, 'admin_profile', None)
