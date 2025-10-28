@@ -90,7 +90,7 @@ class LoginAPIView(APIView):
             user.last_login = timezone.now()
             user.save()
             user_data = UserSerializer(user).data
-            user_data['avatar_url'] = get_avatar_url(user)
+            user_data['avatar_url'] = get_avatar_url(user, request)
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),

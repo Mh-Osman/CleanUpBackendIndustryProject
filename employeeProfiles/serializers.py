@@ -11,7 +11,7 @@ from django.db.models import Avg
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeProfile
-        fields = ['id', 'department', 'role', 'shift', 'avatar','is_on_leave', 'location', 'national_id', 'contact_number', 'location', 'contract_start', 'contract_end', 'base_salary']
+        fields = ['id', 'department', 'role', 'shift', 'avatar', 'is_on_leave', 'location', 'national_id', 'contact_number', 'location', 'contract_start', 'contract_end', 'base_salary']
         read_only_fields = ['contract_start']
         extra_kwargs = {
             'national_id': {'validators': []}  # DRF এর default UniqueValidator remove

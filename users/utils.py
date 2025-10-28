@@ -59,7 +59,7 @@ from employeeProfiles.models import EmployeeProfile
 from admin_dashboard.models import AdminProfileModel
 from users.models import CustomUser
 
-def get_avatar_url(user):
+def get_avatar_url(user, request=None):
     profile = None
 
     if user.user_type == 'client':
@@ -70,7 +70,7 @@ def get_avatar_url(user):
         profile = getattr(user, 'admin_profile', None)
 
     if profile and profile.avatar:
-        return profile.avatar.url
+        return request.build_absolute_uri(profile.avatar.url) if request else profile.avatar.url
 
     return None
 
