@@ -67,7 +67,7 @@ path('api/v1/',include('dynamicForm.urls')),
 path('api/v1/', include('notifications.urls')),
 path('api/v1/chat/', include('chat.urls')),
 ]
-if settings.DEBUG:
+if settings.DEBUG or True:
     import debug_toolbar
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),

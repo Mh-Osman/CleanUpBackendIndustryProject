@@ -61,7 +61,6 @@ class ApartmentSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'client',
-            
             'building',
             'apartment_number',
             'floor',

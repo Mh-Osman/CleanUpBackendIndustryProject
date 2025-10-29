@@ -24,7 +24,7 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
             type="outgoing",  # since it's a sale to a client
             date_issued=date.today(),
             due_date=date.today(),  # or add 7 days etc.
-            status=invoice_status_value,  # or any default status you use
+            status="paid" if getattr(instance, "payment_method", "prepaid") == "prepaid" else "unpaid" , # or any default status you use
             building=instance.building,
             client=instance.user,
             plan=instance.plan,
