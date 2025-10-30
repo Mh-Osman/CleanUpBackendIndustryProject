@@ -60,6 +60,7 @@ class Apartment(models.Model):
     outdoor_area = models.BooleanField(default=False)
     postcode = models.CharField(max_length=5, blank=True,null=True)
     location = models.CharField(max_length=255)
+    
 
     # class Meta:
     #     constraints = [
