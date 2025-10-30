@@ -149,3 +149,23 @@ class ClientSerializer(serializers.ModelSerializer):
         """
         apartments_count = Apartment.objects.filter(client=obj).count()
         return apartments_count
+
+from plan.serializers import InvoiceSerializer, ClientSubscribeSerializer
+from locations.serializers import ApartmentSimpleSerializer, BuildingSimpleSerializer
+class ClientAdminViewSerializer(serializers.ModelSerializer):
+    invoice_client = InvoiceSerializer(many=True, read_only=True)
+    subscription_set = ClientSubscribeSerializer(many=True, read_only=True)
+    buildings = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'invoice_client', 'subscription_set', 'buildings']
+        read_only_fields = ['id', 'date_joined']
+
+    def get_buildings(self, obj):
+    # Find buildings related to the client's apartments
+        building_ids = Apartment.objects.filter(client=obj).values_list('building_id', flat=True).distinct()
+        buildings = Building.objects.filter(id__in=building_ids)
+        # Pass the current client in serializer context
+        return BuildingSimpleSerializer(buildings, many=True, context={'client': obj}).data
+
+

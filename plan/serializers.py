@@ -14,6 +14,12 @@ class ServiceLineItemSerializer(serializers.ModelSerializer):
         model = ServiceLineItem
         fields = ["id","name","description","quantity","unit_price"]
 
+class SimplePlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=PlanModel
+        fields=["id","name","plan_code","interval","amount","description","is_active"]
+        read_only_fields=["created_at","updated_at"]
+
 class PlanSerailzier(serializers.ModelSerializer):
     #salah uddin
     service_line_items=ServiceLineItemSerializer(many=True)
@@ -143,6 +149,14 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
          
 from users.serializers import UserSerializer
+
+class ClientSubscribeSerializer(serializers.ModelSerializer):
+    plan = SimplePlanSerializer(read_only=True)
+    class Meta:
+        model=Subscription
+        fields=['id','user','plan','building','apartment','status','region','payment','employee','canceled_at','paused_at','start_date','current_period_end','created_at','updated_at']
+        read_only_fields=['canceled_at','paused_at','created_at','updated_at']
+
 
 class SubscribeSerializerDetails(serializers.ModelSerializer):
     user=UserSerializer(read_only=True)
