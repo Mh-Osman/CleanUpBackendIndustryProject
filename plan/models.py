@@ -142,7 +142,7 @@ class InvoiceModel(models.Model):
     due_date = models.DateField(null=True, blank=True)
     status=models.CharField(choices=invoice_status,blank=True,null=True)
     building = models.ForeignKey(Building, on_delete=models.SET_NULL,null=True,blank=True)
-    client = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoice_client')
     apartments = models.ManyToManyField(Apartment)
     plan = models.ForeignKey(PlanModel, on_delete=models.SET_NULL, null=True, blank=True)
     vendor_name=models.CharField(blank=True,null=True)

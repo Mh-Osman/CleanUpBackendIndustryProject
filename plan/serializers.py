@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+import plan
 from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,InvoiceLineItem,ServiceLineItem
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuildingSerializer,ApartmentSerializer,RegionSerializer
@@ -13,6 +15,12 @@ class ServiceLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceLineItem
         fields = ["id","name","description","quantity","unit_price"]
+
+class SimplePlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=PlanModel
+        fields=["id","name","plan_code","interval","amount","description","is_active"]
+        read_only_fields=["created_at","updated_at"]
 
 class PlanSerailzier(serializers.ModelSerializer):
     #salah uddin
@@ -144,6 +152,14 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
          
 from users.serializers import UserSerializer
 
+class ClientSubscribeSerializer(serializers.ModelSerializer):
+    plan = SimplePlanSerializer(read_only=True)
+    class Meta:
+        model=Subscription
+        fields=['id','user','plan','building','apartment','status','region','payment','employee','canceled_at','paused_at','start_date','current_period_end','created_at','updated_at']
+        read_only_fields=['canceled_at','paused_at','created_at','updated_at']
+
+
 class SubscribeSerializerDetails(serializers.ModelSerializer):
     user=UserSerializer(read_only=True)
     plan=PlanSerailzier(read_only=True)
@@ -151,12 +167,31 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
     apartment=ApartmentSerializer(read_only=True)
     region=RegionSerializer(read_only=True)
     remaining_days=serializers.SerializerMethodField(read_only=True)
+    invoices = serializers.SerializerMethodField(read_only=True)
     
     
     class Meta:
         model=Subscription
-        fields=['id','user','plan','building','apartment','status','region','remaining_days','payment','employee','canceled_at','paused_at','start_date','current_period_end','created_at','updated_at']
-        read_only_fields=['canceled_at','paused_at','created_at','updated_at']
+        fields=['id','user','plan', 'invoices', 'building','apartment','status','region','remaining_days','payment','employee','canceled_at','paused_at','start_date','current_period_end','created_at','updated_at']
+
+    def get_invoices(self, obj):
+        invoices = InvoiceModel.objects.filter(
+            plan=obj.plan, 
+            client=obj.user, 
+            building=obj.building,
+            apartments=obj.apartment
+        ).first()
+        return InvoiceSerializer(invoices).data
+
+    def get_remaining_days(self, obj):
+        if obj.current_period_end:
+            delta = obj.current_period_end- datetime.now().date()
+            return max(delta.days, 0)
+        return 0
+
+
+
+class SubscriptionHistorySerializer(serializers.ModelSerializer):
         
     def get_remaining_days(self, obj):
         if obj.current_period_end:

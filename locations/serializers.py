@@ -49,7 +49,29 @@ class BuildingSerializer(serializers.ModelSerializer):
 
     def get_region_name(self, obj):
         return obj.region.name if obj.region else None
-
+    
+class BuildingSimpleSerializer(serializers.ModelSerializer):
+    apartments = serializers.SerializerMethodField()
+    class Meta:
+        model = Building
+        fields = ['id', 'name', 'type', 'city', 'location', 'apartments']
+        read_only_fields = ['id']
+    def get_apartments(self, obj):
+        client = self.context.get('client')
+        if client:
+            apartments = obj.apartments.filter(client=client)
+        else:
+            apartments = obj.apartments.all()
+        from locations.serializers import ApartmentSerializerForBuilding  # avoid circular import
+        return ApartmentSerializerForBuilding(apartments, many=True).data
+    
+    
+class ApartmentSimpleSerializer(serializers.ModelSerializer):
+    building = BuildingSimpleSerializer(read_only=True)
+    class Meta:
+        model = Apartment
+        fields = ['id', 'apartment_number', 'building']
+        read_only_fields = ['id']
 
 class ApartmentSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='client'), required=True, allow_null=True)

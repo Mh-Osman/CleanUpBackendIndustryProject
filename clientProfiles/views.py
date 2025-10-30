@@ -1,9 +1,9 @@
 
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, generics
 
 from admin_dashboard import serializers
 from .models import ClientPhone, CustomUser
-from .serializers import ClientSerializer, ClientPhoneSerializer
+from .serializers import ClientAdminViewSerializer, ClientSerializer, ClientPhoneSerializer
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
@@ -77,3 +77,11 @@ def client_overview(request):
     })
 
 
+class adminViewClientData(generics.RetrieveAPIView):
+    # permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ClientAdminViewSerializer
+
+    def get_object(self):
+        client_id = self.kwargs.get('client_id')
+        return CustomUser.objects.filter(user_type='client', id=client_id).prefetch_related('invoice_client').first()
