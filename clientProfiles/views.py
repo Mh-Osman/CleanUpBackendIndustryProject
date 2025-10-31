@@ -64,6 +64,7 @@ def client_overview(request):
     )
 
     client_rating = RatingModel.objects.aggregate(Avg('rating'))['rating__avg'] or 2.5
+    
     client_rating = round(client_rating, 2)
 
     total_client = CustomUser.objects.filter(user_type='client').count()
