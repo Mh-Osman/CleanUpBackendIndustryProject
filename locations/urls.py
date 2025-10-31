@@ -4,6 +4,7 @@ from .views import (
     ApartmentViewSet,
     BuildingViewSet,
     EmployeeInMapViewset,
+    RegionCodeAndClientCodeFilterViewSet,
  
     # EmployeeinMapViewset1,
     RegionDetailViewSet,
@@ -22,6 +23,7 @@ router.register(r'regionlist', RegionDetailViewSet, basename='regionlist')
 # router.register(r'test', EmployeeinMapViewset, basename='location')
 # router.register(r'test1', EmployeeinMapViewset1, basename='location1')
 router.register(r'location_details_according_active_task', EmployeeInMapViewset, basename='location2')
+router.register(r'search_apartment_by_region_client', RegionCodeAndClientCodeFilterViewSet, basename='region-code-client-code-filter')
 urlpatterns = [
     path('', include(router.urls)),
     path('locations/overview/', location_overview, name='location-overview'),  # e.g. /api/locations/location/overview/

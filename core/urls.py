@@ -66,6 +66,7 @@ path('api/v1/',include('employeedashboard.urls')),
 path('api/v1/',include('dynamicForm.urls')),
 path('api/v1/', include('notifications.urls')),
 path('api/v1/chat/', include('chat.urls')),
+path('api/v1/client_dashboard/', include('client_dashboard.urls')),
 ]
 if settings.DEBUG or True:
     import debug_toolbar

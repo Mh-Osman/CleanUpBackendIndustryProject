@@ -141,6 +141,8 @@ INSTALLED_APPS = [
     # 'cloudinary_storage',
     'notifications',
     'rest_framework_simplejwt.token_blacklist',
+
+    'client_dashboard',
 ]
  
 
@@ -183,6 +185,7 @@ ALLOWED_HOSTS = [
     "10.10.13.86",
     "overrigged-botanically-lila.ngrok-free.dev",
     "api.checkall.org",
+    "10.10.13.52" # mahmud
 ]
 
 

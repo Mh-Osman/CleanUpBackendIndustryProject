@@ -7,9 +7,19 @@ from .models import Notification
 from .serializers import NotificationSerializer
 from rest_framework import response
 from rest_framework import status
+from rest_framework import permissions
+
 class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
+    queryset = Notification.objects.none()
     serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Notification.objects.filter(for_admin=True).order_by('-created_at')
+        elif user.is_authenticated:
+            return user.notifications.all().order_by('-created_at')
+        return Notification.objects.none()
 
 
 from rest_framework.decorators import api_view, permission_classes

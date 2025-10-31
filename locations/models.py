@@ -60,7 +60,11 @@ class Apartment(models.Model):
     outdoor_area = models.BooleanField(default=False)
     postcode = models.CharField(max_length=5, blank=True,null=True)
     location = models.CharField(max_length=255)
-
+    # client_code_with_region_name = models.CharField(max_length=150, blank=True, null=True, db_index=True) #format region name - client code
+    # client_code_with_region_code = models.CharField(max_length=150, blank=True, null=True, db_index=True) #format region code - client code
+     # Rename fields
+    apartment_code2 = models.CharField(max_length=150, blank=True, null=True, db_index=True)  # was client_code_with_region_name
+    apartment_code = models.CharField(max_length=150, blank=True, null=True, db_index=True)   # was client_code_with_region_code
     # class Meta:
     #     constraints = [
     #         models.UniqueConstraint(fields=['building', 'client', 'apartment_number'], name='unique_apartment_per_building')
@@ -76,5 +80,37 @@ class Apartment(models.Model):
         postcode_line = f"{self.postcode} {city}"
         country = self.country
         return f"{recipient_name}\n{street_building}\n{city}\n{postcode_line}\n{country}"
+    
+    def client_code_with_region_name_func(self):
+        if self.client and self.building and self.building.region:
+            client_code = str(self.client.id)
+            if len(client_code) == 1:
+                client_code = "00" + client_code
+            elif len(client_code) == 2:
+                client_code = "0" + client_code
+            return f"{self.building.region.name}-{client_code}"
+        return None
+
+    def client_code_with_region_code_func(self):
+        if self.client and self.building and self.building.region:
+            region_code = str(self.building.region.id)
+            if len(region_code) == 1:
+                region_code = "00" + region_code
+            elif len(region_code) == 2:
+                region_code = "0" + region_code
+
+            client_code = self.client.id 
+            if len(str(client_code)) == 1:
+                client_code = "00" + str(client_code)
+            elif len(str(client_code)) == 2:
+                client_code = "0" + str(client_code)
+
+            return f"{region_code}-{client_code}"
+        return None
+    
+    def save(self, *args, **kwargs):
+        self.apartment_code2 = self.client_code_with_region_name_func()
+        self.apartment_code = self.client_code_with_region_code_func()
+        super().save(*args, **kwargs)
 
 auditlog.register(Apartment)

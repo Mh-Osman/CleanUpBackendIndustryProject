@@ -17,6 +17,10 @@ class RegionSerializer(serializers.ModelSerializer):
     
 
 class ApartmentSerializerForBuilding(serializers.ModelSerializer):
+    building_name = serializers.CharField(source='building.name', read_only=True)
+    client_name = serializers.CharField(source='client.name', read_only=True)
+    client_email = serializers.CharField(source='client.email', read_only=True)
+    
     class Meta:
         model = Apartment
         fields = "__all__"
@@ -49,8 +53,30 @@ class BuildingSerializer(serializers.ModelSerializer):
 
     def get_region_name(self, obj):
         return obj.region.name if obj.region else None
-
-
+    
+class BuildingSimpleSerializer(serializers.ModelSerializer):
+    apartments = serializers.SerializerMethodField()
+    class Meta:
+        model = Building
+        fields = ['id', 'name', 'type', 'city', 'location', 'apartments']
+        read_only_fields = ['id']
+    def get_apartments(self, obj):
+        client = self.context.get('client')
+        if client:
+            apartments = obj.apartments.filter(client=client)
+        else:
+            apartments = obj.apartments.all()
+        from locations.serializers import ApartmentSerializerForBuilding  # avoid circular import
+        return ApartmentSerializerForBuilding(apartments, many=True).data
+    
+    
+class ApartmentSimpleSerializer(serializers.ModelSerializer):
+    building = BuildingSimpleSerializer(read_only=True)
+    class Meta:
+        model = Apartment
+        fields = ['id', 'apartment_number', 'building']
+        read_only_fields = ['id']
+from rest_framework.validators import UniqueTogetherValidator
 class ApartmentSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.filter(user_type='client'), required=True, allow_null=True)
     building = BuildingSerializer(required=False)
@@ -71,9 +97,15 @@ class ApartmentSerializer(serializers.ModelSerializer):
             'location',
             'building_id',   # if you are using write-only id field
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'apartment_code2', 'apartment_code']
         UniqueTogether = ('building', 'client', 'apartment_number')
-    
+        validators = [
+        UniqueTogetherValidator(
+                    queryset=Apartment.objects.all(),
+                    fields=['building', 'client', 'apartment_number']
+                )
+            ]
+            
     
     # def validate(self, attrs):
     #     client = attrs.get("client")
