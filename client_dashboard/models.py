@@ -20,3 +20,6 @@ class ClientCheckoutForm(models.Model):
     form_type = models.CharField(max_length=50, choices=CHOICES)
     description = models.TextField(blank=True, null=True)
 
+    class Meta:
+        ordering = ['-id']
+
