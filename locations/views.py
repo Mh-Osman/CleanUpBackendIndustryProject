@@ -47,7 +47,7 @@ class ApartmentViewSet(viewsets.ModelViewSet):
     serializer_class = ApartmentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['apartment_number', 'building__name', 'client__name', 'client_id' , "building_id"]
+    filterset_fields = ['apartment_number', 'building__name', 'client__name', 'client_id' , "building_id",]
     search_fields = ['apartment_number', 'building__name', 'client__name',]
     ordering_fields = ['apartment_number', 'building__name', 'client__name']
 
@@ -208,3 +208,13 @@ class EmployeeInMapViewset(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+#region codde and client code filter 
+
+from .serializers import ApartmentSerializerForBuilding
+class RegionCodeAndClientCodeFilterViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Apartment.objects.select_related('building', 'client').all()
+    serializer_class = ApartmentSerializerForBuilding
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['apartment_code2', 'apartment_code']
+    search_fields = ['apartment_code2', 'apartment_code']

@@ -15,6 +15,11 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
     """
     invoice_status_value = "paid" if instance.status == "active" else "unpaid"
     if created:
+        if instance.plan is not None:
+            from datetime import timedelta
+            days = instance.start_date + timedelta(days=30)
+            instance.current_period_end = days
+            instance.save()
         # Generate a unique invoice ID
         invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
 

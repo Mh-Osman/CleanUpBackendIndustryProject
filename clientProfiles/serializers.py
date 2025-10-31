@@ -156,9 +156,16 @@ class ClientAdminViewSerializer(serializers.ModelSerializer):
     invoice_client = InvoiceSerializer(many=True, read_only=True)
     subscription_set = ClientSubscribeSerializer(many=True, read_only=True)
     buildings = serializers.SerializerMethodField(read_only=True)
+    avatar_url = serializers.SerializerMethodField(read_only=True)
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined', 'invoice_client', 'subscription_set', 'buildings']
+        fields = ['id', 'name', 'email', 'prime_phone', 'avatar_url', 'location',
+                  'is_active', 'date_joined', 'invoice_client', 
+                  'subscription_set', 'buildings']
         read_only_fields = ['id', 'date_joined']
 
     def get_buildings(self, obj):
@@ -167,5 +174,18 @@ class ClientAdminViewSerializer(serializers.ModelSerializer):
         buildings = Building.objects.filter(id__in=building_ids)
         # Pass the current client in serializer context
         return BuildingSimpleSerializer(buildings, many=True, context={'client': obj}).data
+    
 
+    def get_avatar_url(self, obj):
+        if hasattr(obj, 'client_profile') and obj.client_profile and obj.client_profile.avatar:
+            request = self.context.get('request')
+            avatar_url = obj.client_profile.avatar.url
+            if request is not None:
+                return request.build_absolute_uri(avatar_url)
+            return avatar_url
+        return None
 
+    def get_location(self, obj):
+        if hasattr(obj, 'client_profile') and obj.client_profile and obj.client_profile.location:
+            return obj.client_profile.location
+        return None
