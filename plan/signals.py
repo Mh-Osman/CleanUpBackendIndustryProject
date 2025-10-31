@@ -15,11 +15,6 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
     """
     invoice_status_value = "paid" if instance.status == "active" else "unpaid"
     if created:
-        if instance.plan is not None:
-            from datetime import timedelta
-            days = instance.start_date + timedelta(days=30)
-            instance.current_period_end = days
-            instance.save()
         # Generate a unique invoice ID
         invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
 
@@ -66,6 +61,37 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
             for_all=False,
             for_admin=True,
         )
+
+    #osman added this for apartment 
+    # 
+    if instance.apartment:
+        apartment_obj = instance.apartment
+        apartment_obj.client = instance.user
+        apartment_obj.building = instance.building
+        apartment_obj.region = instance.region
+
+        region_obj = instance.region
+        region_name = region_obj.name if region_obj else "No Region"
+        region_str = str(region_obj.id) if region_obj else "0"
+        client_id = str(instance.user.id)
+
+        if len(region_str) == 1:
+            r = "00" + region_str
+        elif len(region_str) == 2:
+            r = "0" + region_str
+        else:
+            r = region_str
+
+        if len(client_id) == 1:
+            c = "00" + client_id
+        elif len(client_id) == 2:
+            c = "0" + client_id
+        else:
+            c = client_id
+
+        apartment_obj.apartment_code = r+"-"+c
+        apartment_obj.apartment_code2 = region_name+"-"+c
+        apartment_obj.save() 
 
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
