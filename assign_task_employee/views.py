@@ -32,10 +32,11 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
             return [CustomWorkerPermission()]
         return [permissions.IsAdminUser()]
     def get_queryset(self):
+
         if not self.request.user.is_staff:
             return self.queryset.filter(
-                worker=self.request.user
-            )
+                Q(worker=self.request.user) | Q(apartment__client=self.request.user)
+            ).distinct()
         return self.queryset
 
             
