@@ -33,14 +33,14 @@ class EmployeeWithProfileSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         profile_data = attrs.get('employee_profile')
         if profile_data:
-            nid = profile_data.get('national_id')
-            user_id = self.instance.id if self.instance else None
-            if EmployeeProfile.objects.exclude(user__id=user_id).filter(national_id=nid).exists():
-                raise serializers.ValidationError({
-                    "employee_profile": {"national_id": "employee profile with this national id already exists."}
-                })
+            nid = profile_data.get('national_id', None)
+            if nid:  # Only validate if national_id is provided
+                user_id = self.instance.id if self.instance else None
+                if EmployeeProfile.objects.exclude(user__id=user_id).filter(national_id=nid).exists():
+                    raise serializers.ValidationError({
+                        "employee_profile": {"national_id": "employee profile with this national id already exists."}
+                    })
         return attrs
-    
 
     def validate_national_id(self, value):
         value = value.strip()

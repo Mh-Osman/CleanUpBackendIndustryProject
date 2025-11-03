@@ -75,8 +75,8 @@ class PersistentIsAuthenticated(permissions.BasePermission):
         method = request.method
 
         # Client -> can do everything on their own objects
-        if user.user_type == 'client':
-            return obj.client == user
+        if user.user_type == 'client' or user.user_type == "admin":
+            return user.is_staff or  obj.client == user
 
         # Employee or Supervisor -> can only GET and PATCH related objects
         elif user.user_type in ['employee', 'supervisor']:
@@ -116,3 +116,6 @@ class ClientCheckoutFormViewSet(viewsets.ModelViewSet):
         else:
             # Client can only see their own forms
             return ClientCheckoutForm.objects.filter(client=user)
+        
+    def perform_create(self, serializer):
+        serializer.save(client=self.request.user)
