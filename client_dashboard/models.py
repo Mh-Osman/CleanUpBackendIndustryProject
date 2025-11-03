@@ -26,4 +26,5 @@ class ClientCheckoutForm(models.Model):
 
     class Meta:
         ordering = ['-id']
+        
 
