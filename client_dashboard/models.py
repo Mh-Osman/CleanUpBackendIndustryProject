@@ -19,6 +19,10 @@ class ClientCheckoutForm(models.Model):
     time_range = models.CharField(max_length=100)
     form_type = models.CharField(max_length=50, choices=CHOICES)
     description = models.TextField(blank=True, null=True)
+    # added in form section 
+    
+    client_set_date = models.DateField(null=True, blank=True)
+ 
 
     class Meta:
         ordering = ['-id']
