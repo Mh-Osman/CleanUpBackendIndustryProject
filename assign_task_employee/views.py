@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView
 from rest_framework import permissions,filters
 from django.db.models import Q
-
+from rest_framework.pagination import PageNumberPagination
 class CustomWorkerPermission(permissions.BasePermission):
     """
     Allow workers to update only their own assigned tasks.
@@ -32,11 +32,24 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
             return [CustomWorkerPermission()]
         return [permissions.IsAdminUser()]
     def get_queryset(self):
+
         if not self.request.user.is_staff:
             return self.queryset.filter(
-                worker=self.request.user
-            )
+                Q(worker=self.request.user) | Q(apartment__client=self.request.user)
+            ).distinct()
         return self.queryset
+
+    def paginate_queryset(self, queryset):
+        user = self.request.user
+        
+        self.pagination_class = self.pagination_class or PageNumberPagination  
+        paginator = self.pagination_class()
+
+     
+        if hasattr(user, "user_type") and user.user_type == "client":
+            paginator.page_size = None  
+        return paginator.paginate_queryset(queryset, self.request, view=self)
+    
 
             
 from django.db.models import OuterRef, Subquery
