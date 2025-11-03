@@ -5,11 +5,13 @@ from notifications.models import Notification
 
 @receiver(post_save, sender=ClientCheckoutForm)
 def create_client_checkout_form(sender, instance, created, **kwargs):
+    print("Signal received for ClientCheckoutForm creation.")
     if not created:
         return
-
+    
+    print("ClientCheckoutForm created signal triggered.")
     client = instance.client
-
+    print(f"Client: {client}")
     # Notify subscription employees
     if instance.subscription:
         for emp in instance.subscription.employee.all():
@@ -41,3 +43,7 @@ def create_client_checkout_form(sender, instance, created, **kwargs):
         for_admin=True,
         for_all=False
     )
+
+    print("Notifications created for ClientCheckoutForm creation.")
+
+    

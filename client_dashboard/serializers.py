@@ -71,7 +71,7 @@ class ClientCheckoutFormSerializer(serializers.ModelSerializer):
 
         if obj.subscription:
 
-            return obj.subscription.building_name
+            return obj.subscription.building.name
 
         return None
  
@@ -79,7 +79,7 @@ class ClientCheckoutFormSerializer(serializers.ModelSerializer):
 
         if obj.subscription:
 
-            return obj.subscription.apartment_number
+            return obj.subscription.apartment.apartment_number
 
         return None
  
@@ -87,7 +87,7 @@ class ClientCheckoutFormSerializer(serializers.ModelSerializer):
 
         if obj.special_service:
 
-            return obj.special_service.building_name
+            return obj.special_service.building.name
 
         return None
  
@@ -95,8 +95,9 @@ class ClientCheckoutFormSerializer(serializers.ModelSerializer):
 
         if obj.special_service:
 
-            return obj.special_service.apartment_number
-
+            apartment_list = obj.special_service.apartment
+            if apartment_list.exists():
+                return apartment_list.first().apartment_number
         return None
 
  
