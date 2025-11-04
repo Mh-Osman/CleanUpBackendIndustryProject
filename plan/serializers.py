@@ -113,7 +113,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
     # Only enforce required fields during creation
       if self.instance is None:
-        required_fields = [user, plan, building, apartment, region, start_date, current_period_end, status]
+        required_fields = [user, plan, building, apartment, region, start_date, status]
         if not all(required_fields):
             raise serializers.ValidationError(
                 "All fields (user, plan, building, apartment, region, start_date, current_period_end, status) are required."
@@ -160,7 +160,7 @@ class SubscribeSerializerDetails(serializers.ModelSerializer):
         
     def get_remaining_days(self, obj):
         if obj.current_period_end:
-            delta = obj.current_period_end- datetime.now().date()
+            delta = obj.current_period_end- obj.start_date
             return max(delta.days, 0)
         return 0
 
