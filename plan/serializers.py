@@ -195,7 +195,7 @@ class SubscriptionHistorySerializer(serializers.ModelSerializer):
         
     def get_remaining_days(self, obj):
         if obj.current_period_end:
-            delta = obj.current_period_end- datetime.now().date()
+            delta = obj.current_period_end- obj.start_date
             return max(delta.days, 0)
         return 0
 
