@@ -218,3 +218,4 @@ class RegionCodeAndClientCodeFilterViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['apartment_code2', 'apartment_code']
     search_fields = ['apartment_code2', 'apartment_code', "client__email"]
+    pagination_class = None
