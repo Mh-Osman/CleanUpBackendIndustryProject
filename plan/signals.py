@@ -5,7 +5,7 @@ from django.dispatch import receiver
 
 from notifications.models import Notification
 from .models import Subscription,InvoiceModel # import your Invoice model
-from datetime import date
+from datetime import date,timedelta
 import uuid
 
 @receiver(post_save, sender=Subscription)
@@ -17,6 +17,8 @@ def create_invoice_for_subscription(sender, instance, created, **kwargs):
     if created:
         # Generate a unique invoice ID
         invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
+        instance.current_period_end=instance.start_date+timedelta(days=30)
+        instance.save()
 
         # Create the invoice
         invoice = InvoiceModel.objects.create(

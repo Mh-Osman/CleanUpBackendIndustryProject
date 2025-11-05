@@ -7,6 +7,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework import permissions,filters
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
+
 class CustomWorkerPermission(permissions.BasePermission):
     """
     Allow workers to update only their own assigned tasks.
@@ -39,16 +40,26 @@ class TaskAssignmentEmployeeView(viewsets.ModelViewSet):
             ).distinct()
         return self.queryset
 
-    def paginate_queryset(self, queryset):
+    def list(self, request, *args, **kwargs):
+        """
+        Custom list view to disable pagination for clients.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
         user = self.request.user
-        
-        self.pagination_class = self.pagination_class or PageNumberPagination  
-        paginator = self.pagination_class()
 
-     
+        # Disable pagination for clients
         if hasattr(user, "user_type") and user.user_type == "client":
-            paginator.page_size = None  
-        return paginator.paginate_queryset(queryset, self.request, view=self)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Normal paginated response for others
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
 
             

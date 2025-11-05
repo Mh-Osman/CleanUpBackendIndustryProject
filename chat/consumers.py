@@ -565,6 +565,19 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+        # 🔔 Send notification to receiver
+        await self.channel_layer.group_send(
+            f"notify_{self.friend_user.id}",
+            {
+                "type": "notify_message",
+                "sender_email": self.user.email,
+                "sender_name": self.user.name,
+                "message": message,
+                "timestamp": saved_message.timestamp.isoformat(),
+                "chat_id": self.chat.id,
+            }
+        )
+
     async def chat_message(self, event):
         # Send message to WebSocket
         await self.send_json({
@@ -648,3 +661,58 @@ class OneToOneChatConsumer(AsyncJsonWebsocketConsumer):
             return list(messages)
         except Exception:
             return []
+        
+
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.db import database_sync_to_async
+from django.utils import timezone
+from users.models import CustomUser
+from chat.models import OneToOneChat, OneToOneChatmassage
+
+
+class Notify(AsyncJsonWebsocketConsumer):
+
+    async def connect(self):
+        self.user = self.scope['user']
+
+        if not self.user or self.user.is_anonymous:
+            await self.close()
+            return
+
+        # Group name specific to this user
+        self.room_name = f"notify_{self.user.id}"
+
+        # Add this socket to that group
+        await self.channel_layer.group_add(self.room_name, self.channel_name)
+        await self.accept()
+
+        await self.send_json({
+            "status": "connected",
+            "message": f"Notification channel active for {self.user.email}"
+        })
+
+    async def disconnect(self, close_code):
+        if hasattr(self, "room_name"):
+            await self.channel_layer.group_discard(self.room_name, self.channel_name)
+
+    async def notify_message(self, event):
+        """
+        This is triggered when a message event is sent to this user's notify group.
+        """
+        await self.send_json({
+            "type": "new_message",
+            "sender_email": event["sender_email"],
+            "sender_name": event["sender_name"],
+            "message": event["message"],
+            "timestamp": event["timestamp"],
+            "chat_id": event["chat_id"]
+        })
+
+
+   
+        
+        
+
+
+
+

@@ -5,7 +5,7 @@ from .models import PlanModel,Subscription,SubscriptionHistory,InvoiceModel,Invo
 from clientProfiles.serializers import ClientProfileSerializer
 from locations.serializers import BuildingSerializer,ApartmentSerializer,RegionSerializer
 from locations.models import Building,Apartment,Region
-from datetime import datetime
+from datetime import datetime,timedelta
 from rest_framework.response import Response
 
 
@@ -195,7 +195,7 @@ class SubscriptionHistorySerializer(serializers.ModelSerializer):
         
     def get_remaining_days(self, obj):
         if obj.current_period_end:
-            delta = obj.current_period_end- datetime.now().date()
+            delta = obj.current_period_end- obj.start_date
             return max(delta.days, 0)
         return 0
 
