@@ -39,6 +39,17 @@ class ClientViewSet(viewsets.ModelViewSet):
   #  permission_classes = [permissions.AllowAny]
     filterset_fields = ['name', 'email', 'prime_phone']
     search_fields = ['name', 'email', 'prime_phone']
+    
+    # def filter_queryset(self, queryset):
+    #     queryset = super().filter_queryset(queryset)
+
+    #     # Custom filter logic: add any extra filters here
+    #     custom_param = self.request.query_params.get('region_id', None)
+    #     if custom_param:
+    #         all_client= Apartment.objects
+
+    #     return queryset
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions
 from rest_framework.response import Response
