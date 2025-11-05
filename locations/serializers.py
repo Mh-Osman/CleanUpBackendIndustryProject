@@ -20,11 +20,21 @@ class ApartmentSerializerForBuilding(serializers.ModelSerializer):
     building_name = serializers.CharField(source='building.name', read_only=True)
     client_name = serializers.CharField(source='client.name', read_only=True)
     client_email = serializers.CharField(source='client.email', read_only=True)
-    
+    region_name = serializers.CharField(source="building.region.name", read_only=True)
+    r_id = serializers.CharField(source="building.region.id", read_only=True)
+    region_id= serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Apartment
         fields = "__all__"
+    
+    def get_region_id(self, obj):
+        rid = str(obj.building.region.id)
+        if len(rid) == 1:
+            rid = "00" + rid
+        elif len(rid) == 2:
+            rid = "0" + rid
 
+        return rid
 
 class BuildingSerializer(serializers.ModelSerializer):
     apartments = ApartmentSerializerForBuilding(many=True, read_only=True)

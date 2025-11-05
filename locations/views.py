@@ -217,4 +217,4 @@ class RegionCodeAndClientCodeFilterViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['apartment_code2', 'apartment_code']
-    search_fields = ['apartment_code2', 'apartment_code']
+    search_fields = ['apartment_code2', 'apartment_code', "client__email"]

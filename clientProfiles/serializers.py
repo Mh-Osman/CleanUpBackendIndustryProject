@@ -38,11 +38,12 @@ class ClientSerializer(serializers.ModelSerializer):
     each_client_pay = serializers.SerializerMethodField(read_only=True)
     each_client_building = serializers.SerializerMethodField(read_only=True)
     each_client_apartment = serializers.SerializerMethodField(read_only=True)
- 
+    # region_list = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = CustomUser
         fields = ['id', 'name', 'email', 'prime_phone', 'is_active', 'date_joined','client_profile', 'extra_phones',
-                  'each_client_services', 'each_client_pay', 'each_client_building', 'each_client_apartment']
+                  'each_client_services', 'each_client_pay', 'each_client_building', 'each_client_apartment',]
         read_only_fields = ['id', 'date_joined']
 
     # ---------------- Create ----------------
@@ -149,6 +150,24 @@ class ClientSerializer(serializers.ModelSerializer):
         """
         apartments_count = Apartment.objects.filter(client=obj).count()
         return apartments_count
+    
+    # def get_region_list(self, obj):
+    #     # Filter apartments by the client (obj), then retrieve the region IDs (building__region)
+    #     region_ids = Apartment.objects.filter(client=obj).values_list('building__region', flat=True)
+
+    #     region_list_dic = {}
+    #     for region_id in region_ids:
+    #         # Retrieve the region object using the region_id
+    #         region = Region.objects.filter(id=region_id).first()
+            
+    #         if region:  # If the region is found, add it to the dictionary
+    #             region_list_dic[region.id] = region.name
+    #         else:
+    #             # Handle the case if region is not found (optional)
+    #             region_list_dic[region_id] = 'Unknown Region'  # Optional fallback
+
+    #     return region_list_dic
+
 
 from plan.serializers import InvoiceSerializer, ClientSubscribeSerializer
 from locations.serializers import ApartmentSimpleSerializer, BuildingSimpleSerializer
