@@ -333,13 +333,10 @@ from assign_task_employee.models import SpecialServicesModel
 #         "connected_users": connected_users_list,
 #         "allowed_users_not_connected": allowed_users_not_connected
 #     })
-
-
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q, Max
+from django.db.models import Q
 from django.utils import timezone
 
 from plan.models import Subscription
@@ -348,84 +345,92 @@ from chat.models import OneToOneChat, OneToOneChatmassage
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def connected_users(request):
     user = request.user
 
-    # -----------------------------
-    # Get active subscriptions
-    # -----------------------------
-    all_subscriptions = Subscription.objects.filter(user=user, status="active").prefetch_related('employee')
-    allow_chat_users = set()
-    allow_chat_users.add(user)
-    subscription_data_map = {}  # user -> subscription info
+    allow_chat_users = set([user])
+    subscription_data_map = {}
+    special_service_data_map = {}
 
-    if user.user_type == 'client':
-        for subscription in all_subscriptions:
-            for emp in subscription.employee.all():
-                allow_chat_users.add(emp)
-                subscription_data_map[emp] = {
-                    "id": subscription.id,
-                    "name": getattr(subscription.plan, "name", None),
-                    "building": getattr(subscription.building, "name", None),
-                    "region": getattr(subscription.region, "name", None),
-                    # "asdigned_date":getattr(subscription.created_at, "name", None)
-                }
-    elif user.user_type in ['employee', 'supervisor']:
-        for subscription in all_subscriptions:
-            client_user = subscription.user
-            allow_chat_users.add(client_user)
-            subscription_data_map[client_user] = {
+    # -----------------------------------------
+    # 1️⃣ Subscriptions
+    # -----------------------------------------
+    all_subscriptions = Subscription.objects.filter(
+        Q(user=user) | Q(employee=user),
+        status="active"
+    ).select_related('building', 'region', 'plan', 'user').prefetch_related('employee')
+
+    for subscription in all_subscriptions:
+        # Add the client (owner)
+        subscription_data_map[subscription.user.id] = {
+            "id": subscription.id,
+            "name": getattr(subscription.plan, "name", None),
+            "building": getattr(subscription.building, "name", None),
+            "region": getattr(subscription.region, "name", None),
+            "location": getattr(subscription.building, "location", None),
+        }
+        allow_chat_users.add(subscription.user)
+
+        # Add employees
+        for emp in subscription.employee.all():
+            subscription_data_map[emp.id] = {
                 "id": subscription.id,
                 "name": getattr(subscription.plan, "name", None),
                 "building": getattr(subscription.building, "name", None),
-                "region": getattr(subscription.region, "name", None)
+                "region": getattr(subscription.region, "name", None),
+                "location": getattr(subscription.building, "location", None),
             }
+            allow_chat_users.add(emp)
 
-    # -----------------------------
-    # Get special services
-    # -----------------------------
+    # -----------------------------------------
+    # 2️⃣ Special services
+    # -----------------------------------------
     all_special_services = SpecialServicesModel.objects.filter(
-        Q(worker=user) | Q(apartment__special_services_apartments__worker=user),
+        Q(worker=user) | Q(apartment__client=user) | Q(apartment__special_services_apartments__worker=user),
         status__in=["pending", "started"]
-    ).distinct().prefetch_related('building', 'region')
+    ).distinct().select_related('building', 'region', 'worker').prefetch_related('apartment__client')
 
-    special_service_data_map = {}  # user -> special service info
-
-    if user.user_type == 'client':
-        for service in all_special_services:
-            allow_chat_users.add(service.worker)
-            special_service_data_map[service.worker] = {
+    for service in all_special_services:
+        # Worker
+        if service.worker:
+            special_service_data_map[service.worker.id] = {
                 "id": service.id,
                 "name": service.name,
                 "region": getattr(service.region, "name", None),
                 "building": getattr(service.building, "name", None),
+                "location": getattr(service.building, "location", None),
             }
+            allow_chat_users.add(service.worker)
 
-    elif user.user_type in ['employee', 'supervisor']:
-        for service in all_special_services:
-            for apt in service.apartment.all():
-                client_user = getattr(apt, "client", None)
-                if client_user:
-                    allow_chat_users.add(client_user)
-                    special_service_data_map[client_user] = {
-                        "id": service.id,
-                        "name": service.name,
-                        "region": getattr(service.region, "name", None),
-                        "building": getattr(service.building, "name", None),
-                    }
+        # Clients of apartments
+        for apt in service.apartment.all():
+            client_user = getattr(apt, "client", None)
+            if client_user:
+                special_service_data_map[client_user.id] = {
+                    "id": service.id,
+                    "name": service.name,
+                    "region": getattr(service.region, "name", None),
+                    "building": getattr(service.building, "name", None),
+                    "location": getattr(service.building, "location", None),
+                }
+                allow_chat_users.add(client_user)
 
-    # -----------------------------
-    # Get one-to-one chats and latest message
-    # -----------------------------
-    chats = OneToOneChat.objects.filter(Q(user1=user) | Q(user2=user)).prefetch_related('user1', 'user2')
-    user_dict = {}  # email -> user data
+    # -----------------------------------------
+    # 3️⃣ One-to-one chats
+    # -----------------------------------------
+    chats = OneToOneChat.objects.filter(
+        Q(user1=user) | Q(user2=user)
+    ).select_related('user1', 'user2')
+
+    user_dict = {}
 
     for chat in chats:
         friend = chat.user2 if chat.user1 == user else chat.user1
-        # Get the most recent message
         last_message = OneToOneChatmassage.objects.filter(chat=chat).order_by('-timestamp').first()
+
         last_message_data = None
         if last_message:
             last_message_data = {
@@ -438,30 +443,33 @@ def connected_users(request):
         user_dict[friend.email] = {
             "email": friend.email,
             "name": getattr(friend, "name", friend.username),
-            "subscription": subscription_data_map.get(friend),
-            "special_service": special_service_data_map.get(friend),
+            "subscription": subscription_data_map.get(friend.id),
+            "special_service": special_service_data_map.get(friend.id),
             "status": "connected",
             "last_message": last_message_data,
             "last_chat": last_message.timestamp if last_message else None
         }
         allow_chat_users.discard(friend)
 
-    # Remaining allowed users not connected
+    # -----------------------------------------
+    # 4️⃣ Remaining users
+    # -----------------------------------------
     for u in allow_chat_users:
         if u == user:
             continue
         user_dict[u.email] = {
             "email": u.email,
             "name": getattr(u, "name", u.username),
-            "subscription": subscription_data_map.get(u),
-            "special_service": special_service_data_map.get(u),
+            "subscription": subscription_data_map.get(u.id),
+            "special_service": special_service_data_map.get(u.id),
             "status": "not_connected",
             "last_message": None,
             "last_chat": None
         }
-     
-    # Sort by recent message timestamp
-    # Define a helper to make all datetimes aware
+
+    # -----------------------------------------
+    # 5️⃣ Sort by last chat (timezone-safe)
+    # -----------------------------------------
     def make_aware(dt):
         if dt is None:
             return timezone.datetime.min.replace(tzinfo=timezone.get_current_timezone())
@@ -469,16 +477,13 @@ def connected_users(request):
             return timezone.make_aware(dt, timezone.get_current_timezone())
         return dt
 
-    # Sort users by recent message timestamp
     all_users_sorted = sorted(
         user_dict.values(),
         key=lambda x: make_aware(x.get("last_chat")),
         reverse=True
-        )
-    # Remove last_chat field before sending to client
+    )
+
     for u in all_users_sorted:
         u.pop("last_chat", None)
 
-    return Response({
-        "users": all_users_sorted
-    })
+    return Response({"users": all_users_sorted})

@@ -19,4 +19,17 @@ websocket_urlpatterns = [
         consumers.OneToOneChatConsumer.as_asgi(),
         name="one_to_one_chat_socket"
     ),
+ 
+
+     # -----------------------------
+    # Notification WebSocket Route
+    # -----------------------------
+    
+    re_path(
+            r"ws/notify/$",  # e.g., ws://localhost:8000/ws/notify/
+            consumers.Notify.as_asgi(),
+            name="notify_socket"
+        ),
+
+
 ]
