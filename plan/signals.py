@@ -4,36 +4,33 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from notifications.models import Notification
-from .models import Subscription,InvoiceModel # import your Invoice model
+from .models import Subscription,InvoiceModel 
 from datetime import date,timedelta
 import uuid
 
 @receiver(post_save, sender=Subscription)
 def create_invoice_for_subscription(sender, instance, created, **kwargs):
-    """
-    When a new Subscription is created, automatically generate an invoice.
-    """
     invoice_status_value = "paid" if instance.status == "active" else "unpaid"
     if created:
-        # Generate a unique invoice ID
+    
         invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
         instance.current_period_end=instance.start_date+timedelta(days=30)
         instance.save()
 
-        # Create the invoice
+       
         invoice = InvoiceModel.objects.create(
             invoice_id=invoice_id,
-            type="outgoing",  # since it's a sale to a client
+            type="outgoing",  
             date_issued=date.today(),
-            due_date=date.today(),  # or add 7 days etc.
-            status=invoice_status_value,  # or any default status you use
+            due_date=date.today(),  
+            status=invoice_status_value, 
             building=instance.building,
             client=instance.user,
             plan=instance.plan,
             total_amount=instance.plan.amount,
             note=f"Subscription created for {instance.user.email}",
         )
-# <<<<<<< HEAD
+
 
 
 # =======

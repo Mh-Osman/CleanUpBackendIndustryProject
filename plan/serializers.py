@@ -121,7 +121,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
         # Prevent duplicate active/pending subscriptions
         subscription = Subscription.objects.filter(
-            user=user,
+            # user=user,
             plan=plan,
             building=building,
             region=region,
