@@ -111,7 +111,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
       current_period_end = attrs.get('current_period_end')
       status = attrs.get("status")
 
-    # Only enforce required fields during creation
+    
       if self.instance is None:
         required_fields = [user, plan, building, apartment, region, start_date, status]
         if not all(required_fields):
@@ -119,7 +119,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 "All fields (user, plan, building, apartment, region, start_date, current_period_end, status) are required."
             )
 
-        # Prevent duplicate active/pending subscriptions
+        
         subscription = Subscription.objects.filter(
             # user=user,
             plan=plan,
