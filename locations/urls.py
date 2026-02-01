@@ -10,6 +10,7 @@ from .views import (
     RegionDetailViewSet,
     RegionViewSet,
     # EmployeeInMapViewset2,
+    BuildingMap,
 )
 
 from .views import location_overview, BuilgingByRegionIdList
@@ -28,5 +29,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('locations/overview/', location_overview, name='location-overview'),  # e.g. /api/locations/location/overview/
     path('buildings/region/<int:region_id>/', BuilgingByRegionIdList, name='buildings-by-region'),  # e.g. /api/locations/buildings/by-region/1/
-  
+    path("map/data/",BuildingMap.as_view(),name="map-data")
 ]

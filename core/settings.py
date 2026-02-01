@@ -143,6 +143,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 
     'client_dashboard',
+
+    #celery beat
+    'django_celery_beat',
 ]
  
 
@@ -164,7 +167,14 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Riyadh'
 
 
+#clelery beat schedule
 
+CELERY_BEAT_SCHEDULE = {
+    'delete-old-notifications': {
+        'task': 'notifications.tasks.delete_old_notifications',
+        'schedule': timedelta(days=30),
+    },
+}   
 
 
 INTERNAL_IPS = [ #osman

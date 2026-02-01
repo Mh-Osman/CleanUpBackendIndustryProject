@@ -59,3 +59,4 @@ def notification_according_to_user(request):
     
     serializer = NotificationSerializer(notifications, many=True)
     return response.Response(serializer.data, status=status.HTTP_200_OK)
+

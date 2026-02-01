@@ -218,3 +218,33 @@ class RegionCodeAndClientCodeFilterViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['apartment_code2', 'apartment_code']
     search_fields = ['apartment_code2', 'apartment_code', "client__email"]
+
+
+
+
+#new map api .made at feb 1 2026
+from rest_framework import status
+class BuildingMap(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request):
+        buildings = Building.objects.values("name", "latitude", "longitude","type", "id","region__name")
+        data = []
+        for building in buildings:
+            data.append({
+                "geometry": {
+                    "coordinates": [building["longitude"], building["latitude"]],
+                    "type": "Point",
+                },
+                "properties": {
+                    "category": building["type"],
+                    "id": building["id"],
+                    "name": building["name"],
+                    "region": building["region__name"],
+                }
+            })
+        
+
+
+        return Response(data, status=status.HTTP_200_OK)
+
+        
