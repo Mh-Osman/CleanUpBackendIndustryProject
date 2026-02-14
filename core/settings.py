@@ -188,7 +188,7 @@ ALLOWED_HOSTS = [
     "10.10.13.52", # mahmud
     "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org/",
+    "http://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
 ]
 
@@ -199,7 +199,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://api.checkall.org/",
      "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org/",
+    "http://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
     
    
@@ -216,7 +216,7 @@ CSRF_TRUSTED_ORIGINS = [
      "http://api.checkall.org",
       "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org/",
+    "http://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
 ]
 
@@ -232,7 +232,7 @@ CORS_ALLOWED_ORIGINS = [
      "https://www.checkall.org",
       "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org/",
+    "http://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
     
 ]
