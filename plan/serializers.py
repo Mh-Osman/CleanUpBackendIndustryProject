@@ -140,7 +140,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             if subscription.status == 'active':
                 s_user= subscription.user
                 if user!=s_user:
-                    raise serializer.ValidationError("Same Apartment already assigned to another user.")
+                    raise serializers.ValidationError("Same Apartment already assigned to another user.")
                 else:
                     raise serializers.ValidationError("This user already have an active subscription on this apartment.")
             elif subscription.status == 'paused':
