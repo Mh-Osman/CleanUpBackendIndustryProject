@@ -174,21 +174,21 @@ INTERNAL_IPS = [ #osman
 
 ]
 ALLOWED_HOSTS = [
-    "127.0.0.1",
+    # "127.0.0.1",
     "localhost",
     "randomid.ngrok-free.app",
     ".ngrok-free.app",
-    "127.0.0.1:6868",
-    "127.0.0.1:4041",
-    "10.10.13.61",
-    "10.10.13.75",
-    "10.10.13.86",
+    # "127.0.0.1:6868",
+    # "127.0.0.1:4041",
+    # "10.10.13.61",
+    # "10.10.13.75",
+    # "10.10.13.86",
     "overrigged-botanically-lila.ngrok-free.dev",
     "api.checkall.org",
-    "10.10.13.52", # mahmud
-    "http://college.checkall.org",
+    # "10.10.13.52", # mahmud
+    # "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org",
+    "https://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
 ]
 
