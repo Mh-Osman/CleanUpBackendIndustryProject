@@ -199,7 +199,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://api.checkall.org/",
      "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org",
+    "https://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
     
    
@@ -209,14 +209,14 @@ CSRF_TRUSTED_ORIGINS = [
    "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://*.ngrok-free.app",
-    "http://127.0.0.1:6868",
-    "http://10.10.13.86:6868",
+    # "http://127.0.0.1:6868",
+    # "http://10.10.13.86:6868",
      "https://overrigged-botanically-lila.ngrok-free.dev",
      "https://api.checkall.org",
      "http://api.checkall.org",
       "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org",
+    "https://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
 ]
 
@@ -225,14 +225,14 @@ SESSION_COOKIE_SECURE = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://10.10.13.86:6868",
+    # "http://10.10.13.86:6868",
     "https://*.ngrok-free.app",
      "https://overrigged-botanically-lila.ngrok-free.dev",
      "https://checkall.org",
      "https://www.checkall.org",
       "http://college.checkall.org",
     "https://checkall.org",
-    "http://www.checkall.org",
+    "https://www.checkall.org",
     "https://cleanuppro-naim.netlify.app",
     
 ]
