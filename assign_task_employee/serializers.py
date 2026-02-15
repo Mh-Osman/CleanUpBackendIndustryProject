@@ -86,7 +86,10 @@ class SpecialServicesModelSerializer(serializers.ModelSerializer):
       
         base_price = attrs.get('base_price', 0)
         discount = attrs.get('discount', 0)
-
+        if discount is None:
+            attrs['discount'] = 0
+            discount = 0
+            
         if base_price < 0:
             raise serializers.ValidationError({"base_price": "Base price must be non-negative."})
         if discount < 0:

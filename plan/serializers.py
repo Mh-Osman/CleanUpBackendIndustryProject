@@ -144,7 +144,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 else:
                     raise serializers.ValidationError("This user already have an active subscription on this apartment.")
             elif subscription.status == 'paused':
-                raise serializers.ValidationError("This plan is paused — use resume to activate it.")
+                raise serializers.ValidationError("This subscription is paused — use resume to activate it.")
             elif subscription.status == 'past_due':
                 raise serializers.ValidationError("Your subscription is past due — update it first.")
     
