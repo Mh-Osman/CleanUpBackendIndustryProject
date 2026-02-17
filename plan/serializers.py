@@ -87,8 +87,11 @@ class CalculationsForInvoice(serializers.Serializer):
 
 from rest_framework import serializers
 from .models import Subscription, PlanModel, Building, Apartment, Region
-
+from datetime import datetime
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateField(
+        input_formats=["%d-%m-%Y", "%Y-%m-%d"]
+    )
     class Meta:
         model = Subscription
         fields = [
@@ -118,7 +121,8 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
       start_date = attrs.get('start_date')
     #   current_period_end = attrs.get('current_period_end')
       status = attrs.get("status")
-
+     #date formate -day-m-year -> year-month-day 
+    
     # Only enforce required fields during creation
       if self.instance is None:
         required_fields = [user, plan, building, apartment, region, start_date, status]
