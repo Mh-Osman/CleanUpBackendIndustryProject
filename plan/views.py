@@ -340,7 +340,7 @@ class CalculationsForInvoiceView(APIView):
             paid=InvoiceModel.objects.filter(status='paid').count()
             unpaid=InvoiceModel.objects.filter(status='unpaid').count()
             return Response({
-            "total":total,
+            "total":sales-expense,
             "sales":sales,
             "expense":expense,
             "total_invoice":total_invoice,
